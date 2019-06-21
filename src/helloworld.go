@@ -1,8 +1,34 @@
 package main
 
-import "fmt"
+import (
+	"Config"
+	"Events"
+	"Logger"
+	"Networking"
+)
 
-func main(){
+func Start() {
+	Config.Setup()
 
-  fmt.Println("Hello World!")
+	Logger.Start()
+}
+
+var done chan bool
+
+func Run() {
+	defer func() { done <- true }()
+	var webClient <-chan bool
+	Events.FuncEvent("Networking.StartWebClient", func() { webClient = Networking.StartWebClient() })
+	<-webClient
+}
+
+func Close() {
+	Logger.Close()
+}
+func main() {
+	done = make(chan bool, 1)
+	Start()
+	Events.FuncEvent("main.Run", Run)
+	<-done
+	Close()
 }
