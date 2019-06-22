@@ -4,6 +4,8 @@ import (
 	"Events"
 	"Networking"
 	"common_chat"
+	"databasing"
+	"os"
 )
 
 func Run() {
@@ -13,5 +15,15 @@ func Run() {
 	<-webClient
 }
 func main() {
-	common_chat.MainStart("main.Run", Run)
+	args := os.Args
+	if len(args) == 0 {
+		common_chat.MainStart("main.Run", Run)
+	} else {
+		switch args[1] {
+		case "chat_service":
+			common_chat.MainStart("main.Run", Run)
+		case "setup_database":
+			common_chat.MainStart("databasing.Setup", databasing.Setup)
+		}
+	}
 }

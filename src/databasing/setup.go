@@ -22,7 +22,3 @@ func Setup() {
 		}
 	})
 }
-
-func main() {
-	common_chat.MainStart("databasing.Setup", Setup)
-}
