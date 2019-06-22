@@ -186,7 +186,7 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 					case "chat_msg":
 						registry.broadcast <- message
 					case "new_connection":
-						//registry.broadcast <- []byte("{new_connection}" + c.conn.LocalAddr().String() + "::" + c.conn.RemoteAddr().String())
+						registry.broadcast <- []byte("{new_connection}" + c.conn.LocalAddr().String() + "::" + c.conn.RemoteAddr().String())
 						registry.broadcast <- message
 					}
 				case adminPasswordRequired:
