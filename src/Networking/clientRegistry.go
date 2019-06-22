@@ -9,6 +9,7 @@ type ClientRegistry struct {
 	register   chan *Client
 	unregister chan *Client
 	clients    map[*Client]bool
+	ipNames    map[string]string
 	broadcast  chan []byte
 }
 
@@ -29,6 +30,9 @@ func (h *ClientRegistry) run() {
 		case client := <-h.register:
 			Events.FuncEvent("ClientRegistry.Register", func() {
 				h.clients[client] = true
+				if name, present := h.ipNames[client.ip]; present {
+					client.name = name
+				}
 			})
 		case client := <-h.unregister:
 			Events.FuncEvent("ClientRegistry.Unregister", func() {

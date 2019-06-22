@@ -40,6 +40,12 @@ type Client struct {
 	// The websocket connection.
 	conn *websocket.Conn
 
+	ip string
+
+	port int
+
+	name string
+
 	// Buffered channel of outbound messages.
 	send chan []byte
 	// Registered clients.
@@ -49,8 +55,12 @@ type Client struct {
 }
 
 func newClient(conn *websocket.Conn) *Client {
+	ip, port := GetIPFromAddress(conn.RemoteAddr().String())
 	return &Client{
 		conn:   conn,
+		ip:     ip,
+		port:   port,
+		name:   "_none_",
 		send:   make(chan []byte, 256),
 		handle: make(chan []byte)}
 }
@@ -186,8 +196,9 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 					case "chat_msg":
 						registry.broadcast <- message
 					case "new_connection":
-						registry.broadcast <- []byte("{new_connection}" + c.conn.LocalAddr().String() + "::" + c.conn.RemoteAddr().String())
-						registry.broadcast <- message
+						//registry.broadcast <- []byte("{new_connection}" + c.conn.LocalAddr().String() + "::" + c.conn.RemoteAddr().String())
+						//registry.broadcast <- message
+
 					}
 				case adminPasswordRequired:
 					if string(message) == adminPassword {
