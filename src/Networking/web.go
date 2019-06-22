@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-var addr = flag.String("addr", ":8086", "http service address")
+var addr = flag.String("addr", ":8080", "http service address")
 
 func setupAdminCommands() {
 	adminCommands = make(map[string]Events.Event)
@@ -39,7 +39,7 @@ func StartWebClient() <-chan bool {
 	done := make(chan bool, 1)
 	Shutdown = make(chan bool, 1)
 	flag.Parse()
-	srv := &http.Server{Addr: ":8086"}
+	srv := &http.Server{Addr: ":8080"}
 	registry := newRegistry()
 	go registry.run()
 	http.HandleFunc("/", serveHome)
@@ -57,7 +57,7 @@ func StartWebClient() <-chan bool {
 		done <- true
 	})
 	go func() {
-		time.Sleep(300 * time.Second)
+		time.Sleep(1 * time.Hour)
 		Shutdown <- true
 	}()
 
