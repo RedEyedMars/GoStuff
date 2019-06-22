@@ -63,7 +63,7 @@ document.getElementById("form").onsubmit = function () {
 if (window["WebSocket"]) {
     conn = new WebSocket("ws://" + document.location.host + "/ws");
     conn.onopen = function (evt) {
-      conn.send("{new_connection}"+conn._socket.remoteAddress);
+      conn.send("{new_connection}");
     };
     conn.onclose = function (evt) {
         var item = document.createElement("div");
