@@ -11,15 +11,24 @@ import (
 
 var dbQueries map[string]string
 var dbQueryArgumentLength map[string]int
+
 var ResourceRequests chan *DBResourceResponse
+var ChatMsgRequests chan *DBChatMsgResponse
+
+var LoadedResources map[string]Resource
 
 func Setup() {
 	dbQueries = make(map[string]string)
 	dbQueryArgumentLength = make(map[string]int)
 	ResourceRequests = make(chan *DBResourceResponse)
-	Events.FuncEvent("databasing.SetupResources", SetupResources())
+	ChatMsgRequests = make(chan *DBChatMsgResponse)
+	Events.FuncEvent("databasing.SetupResources", SetupResources)
+	Events.FuncEvent("databasing.SetupChatMsgs", SetupChatMsgs)
 }
-
+func defineQuery(name string, query string, argLength int) {
+	dbQueries[name] = query
+	dbQueryArgumentLength[name] = argLength
+}
 func Start() {
 	defer common_chat.MainEnd()
 	Logger.Verbose <- Logger.Msg{"Setting up database..."}
@@ -47,19 +56,16 @@ func StartMessageListening(db *sql.DB) {
 		select {
 		case request := <-ResourceRequests:
 			if rows, err := db.Query(request.Query()); err != nil {
-				Logger.Error <- Logger.ErrMsg{err, "StartMessageListening.ResourceRequest.Query"}
+				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ResourceRequest.Query"}
 			} else {
-				for rows.Next() {
-					var (
-						name   string
-						source string
-						abv    string
-					)
-					if err := rows.Scan(&name, &source, &abv); err != nil {
-						Logger.Error <- Logger.ErrMsg{err, "StartMessageListening.ResourceRequest.Scan"}
-					}
-					request.Resources <- Resource{name, source, abv}
-				}
+				Events.GoFuncEvent("databasing.Resources.Parse", func() { request.Parse(rows) })
+			}
+
+		case request := <-ResourceRequests:
+			if rows, err := db.Query(request.Query()); err != nil {
+				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ResourceRequest.Query"}
+			} else {
+				Events.GoFuncEvent("databasing.Resources.Parse", func() { request.Parse(rows) })
 			}
 		default:
 			return

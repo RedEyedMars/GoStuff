@@ -2,6 +2,7 @@ package databasing
 
 import (
 	"Logger"
+	"database/sql"
 	"errors"
 	"fmt"
 	"strconv"
@@ -19,6 +20,9 @@ type DBResourceResponse struct {
 }
 
 func NewResourceResponse(name string, arg ...string) *DBResourceResponse {
+	return NewResourceResponseArr(name, arg)
+}
+func NewResourceResponseArr(name string, arg []string) *DBResourceResponse {
 	name = "Resource_" + name
 	switch dbQueryArgumentLength[name] {
 	case 0:
@@ -48,8 +52,22 @@ func SetupResources() {
 	defineQuery("Resources_ByAbv", `SELECT name, source, abv FROM resources WHERE abv='%s' ;`, 1)
 	defineQuery("Resources_BySource", `SELECT name, source, abv FROM resources WHERE source='%s' ;`, 1)
 }
-
-func defineQuery(name string, query string, argLength int) {
-	dbQueries[name] = query
-	dbQueryArgumentLength[name] = argLength
+func RequestResource(name string, args ...string) <-chan Resource {
+	request := NewResourceResponseArr(name, args)
+	ResourceRequests <- request
+	return request.Resources
+}
+func (r *DBResourceResponse) Parse(rows *sql.Rows) {
+	for rows.Next() {
+		var (
+			name   string
+			source string
+			abv    string
+		)
+		if err := rows.Scan(&name, &source, &abv); err != nil {
+			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.resources.Parse"}
+		}
+		r.Resources <- Resource{name, source, abv}
+	}
+	close(r.Resources)
 }

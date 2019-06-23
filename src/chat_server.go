@@ -23,7 +23,7 @@ func main() {
 		case "chat_service":
 			common_chat.MainStart("main.Run", Run)
 		case "setup_database":
-			common_chat.MainStart("databasing.Setup", databasing.Setup)
+			common_chat.MainStart("databasing.Setup", databasing.Start)
 		}
 	}
 }
