@@ -16,13 +16,16 @@ type ChatMsg struct {
 	Sender    string
 	Resources string
 	Timestamp *time.Time
-	OrderId   int
+	OrderID   int
 }
 
 func (cm *ChatMsg) LoadResources() {
 	for i := 3; i < len(cm.Resources); i += 3 {
 		if _, present := LoadedResources[cm.Resources[i-3:i]]; !present {
-			Events.GoFuncEvent("databasing.chatmsgs.LoadResource", func() { LoadedResources[cm.Resources[i-3:i]] = <-RequestResource("ByAbv", cm.Resources[i-3:i]) })
+
+			Events.GoFuncEvent("databasing.chatmsgs.LoadResource", func() {
+				LoadedResources[cm.Resources[i-3:i]] = <-RequestResource("ByAbv", cm.Resources[i-3:i])
+			})
 		}
 	}
 }
@@ -36,7 +39,7 @@ func NewChatMsgResponse(name string, arg ...string) *DBChatMsgResponse {
 	return NewChatMsgResponseArr(name, arg)
 }
 func NewChatMsgResponseArr(name string, arg []string) *DBChatMsgResponse {
-	name = "Resource_" + name
+	name = "ChatMsg_" + name
 	switch dbQueryArgumentLength[name] {
 	case 0:
 		return &DBChatMsgResponse{
@@ -55,13 +58,14 @@ func NewChatMsgResponseArr(name string, arg []string) *DBChatMsgResponse {
 			Query:    func() string { return fmt.Sprintf(dbQueries[name], arg[0], arg[1], arg[2]) },
 			ChatMsgs: make(chan ChatMsg, 1)}
 	default:
-		Logger.Error <- Logger.ErrMsg{errors.New(name + "has to many arguments:" + strconv.Itoa(dbQueryArgumentLength[name])), "databasing.ChatMsg.NewChatMsgResponse"}
+		Logger.Error <- Logger.ErrMsg{Err: errors.New(name + "has to many arguments:" + strconv.Itoa(dbQueryArgumentLength[name])), Status: "databasing.ChatMsg.NewChatMsgResponse"}
 		return nil
 	}
 }
 
 func SetupChatMsgs() {
-	defineQuery("Resources_ByName", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM made_orders WHERE timestamp >= NOW() - INTERVAL 24 HOUR  LIMIT 16 ;`, 0)
+	defineQuery("ChatMsg_RecentOnChannel", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM made_orders WHERE channel = '%s' AND timestamp >= NOW() - INTERVAL 24 HOUR  LIMIT 16 ;`, 1)
+	defineQuery("ChatMsg_ByIdOnChannel", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM made_orders WHERE id < %s AND channel = '%s'  LIMIT 16 ;`, 2)
 }
 func RequestChatMsg(name string, args ...string) <-chan ChatMsg {
 	request := NewChatMsgResponseArr(name, args)
