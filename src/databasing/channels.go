@@ -48,10 +48,12 @@ func NewChannelResponseArr(name string, arg []string) *DBChannelResponse {
 }
 
 func SetupChannels() {
-	defineQuery("Channels_All", `SELECT channel_name,id FROM channels_names ;`, 0)
+	defineQuery("Channels_All", `SELECT channel_name,member_name,id FROM channels_names ;`, 0)
+	defineQuery("Channels_AllNames", `SELECT channel_name,id FROM channels_names ;`, 0)
 
 	defineQuery("Channels_Members", `SELECT member_name FROM channels_names WHERE chanel_name='%s' ;`, 1)
 	defineQuery("Members_Channels", `SELECT channel_name FROM channels_names WHERE member_name='%s' ;`, 1)
+	defineQuery("Channels_Channels", `SELECT channel_name FROM channels_names ;`, 1)
 }
 func RequestChannel(name string, args ...string) <-chan *Channel {
 	request := NewChannelResponseArr(name, args)
@@ -63,7 +65,9 @@ func RequestChannelsByName(name string, args ...string) <-chan *Channel {
 	ChannelNamesRequests <- request
 	return request.Channels
 }
-func (chs *DBChannelResponse) Parse(rows *sql.Rows) {
+func (chs *DBChannelResponse) ParseNew(rows *sql.Rows) {
+	var channel *Channel
+	channel = nil
 	for rows.Next() {
 		var (
 			name string
@@ -72,8 +76,7 @@ func (chs *DBChannelResponse) Parse(rows *sql.Rows) {
 		if err := rows.Scan(&name, &id); err != nil {
 			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.channels.Parse"}
 		}
-
-		chs.Channels <- &Channel{name, make(map[string]*Member), id}
+		chs.Channels <- channel
 	}
 	close(chs.Channels)
 }

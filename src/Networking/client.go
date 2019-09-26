@@ -5,7 +5,6 @@ import (
 	"Logger"
 	"bytes"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -169,47 +168,40 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 	for {
 		select {
 		case message := <-c.handle:
-			Logger.VeryVerbose <- Logger.Msg{string(message), "Recieve"}
-			if len(message) > 0 && message[0] == '/' {
+			Logger.VeryVerbose <- Logger.Msg{string(message), "Receive"}
 
-				if commands := strings.Split(string(message[1:]), " "); len(commands) > 0 {
-					args := commands[1:]
-					switch commands[0] {
-					case "mode":
-						if len(args) > 0 {
-							if args[0] == "admin" {
-								mode = adminPasswordRequired
-								c.send <- []byte("Enter password:")
-							} else {
-								mode = client
-							}
-						} else {
-							mode = client
-						}
-					}
+			switch command, msg := DifferentiateMessage(message); command {
+			case "chat_msg":
+				registry.broadcast <- message
+			case "new_connection":
+				//registry.broadcast <- []byte("{new_connection}" + c.conn.LocalAddr().String() + "::" + c.conn.RemoteAddr().String())
+				//registry.broadcast <- message
+			case "/mode":
+				switch string(msg) {
+				case "admin":
+					mode = adminPasswordRequired
+					c.send <- []byte("{admin_msg}Enter password:")
+				default:
+					mode = client
 				}
-			} else {
-				switch mode {
-				case client:
-					//RemoteAddr
-					switch command, _ := DifferentiateMessage(message); command {
-					case "chat_msg":
-						registry.broadcast <- message
-					case "new_connection":
-						//registry.broadcast <- []byte("{new_connection}" + c.conn.LocalAddr().String() + "::" + c.conn.RemoteAddr().String())
-						//registry.broadcast <- message
+				if mode == client {
+					Logger.Verbose <- Logger.Msg{"Client.HandleMessages", "Client"}
+				} else {
+					Logger.Verbose <- Logger.Msg{"Client.HandleMessages", "Ask for Password"}
+				}
 
-					}
-				case adminPasswordRequired:
-					if string(message) == adminPassword {
-						c.send <- []byte("Access Granted!")
-						mode = admin
-					} else {
-						c.send <- []byte("Access Denied!")
-						mode = client
-					}
-				case admin:
-					Events.HandleEvent(adminCommands[string(message)])
+			case "/pwd":
+				if mode == adminPasswordRequired && string(msg) == adminPassword {
+					c.send <- []byte("{admin_msg}Access Granted!")
+					mode = admin
+				} else {
+					c.send <- []byte("{admin_msg}Access Denied!")
+					mode = client
+				}
+			default:
+				if mode == admin {
+
+					Events.HandleEvent(adminCommands[string(msg)])
 				}
 			}
 			//default:

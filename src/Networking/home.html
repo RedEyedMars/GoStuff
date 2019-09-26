@@ -56,7 +56,19 @@ document.getElementById("form").onsubmit = function () {
     if (!msg.value) {
         return false;
     }
-    conn.send("{chat_msg}"+msg.value);
+    if (msg.value.charAt(0) == '/') {
+      var index = msg.value.indexOf(' ');
+      if (index != -1) {
+        conn.send("{"+msg.value.substring(0,index)+"}"+msg.value.substring(index+1));
+      }
+      else {
+        conn.send("{"+msg.value+"}");
+      }
+
+    }
+    else {
+      conn.send("{chat_msg}"+msg.value);
+    }
     msg.value = "";
     return false;
 };
@@ -74,6 +86,15 @@ if (window["WebSocket"]) {
         var result = /\{([^\{\}]+)\}(.*)/g.exec(evt.data);
         switch (result[1]){
           case "chat_msg":{
+          var messages = result[2].split('\n');
+          for (var i = 0; i < messages.length; i++) {
+            var item = document.createElement("div");
+            item.innerHTML = createTextLinks_(messages[i]);
+            appendLog(item);
+          }
+          break;
+        }
+        case "admin_msg":{
           var messages = result[2].split('\n');
           for (var i = 0; i < messages.length; i++) {
             var item = document.createElement("div");

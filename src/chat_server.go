@@ -16,7 +16,7 @@ func Run() {
 }
 func main() {
 	args := os.Args
-	if len(args) == 0 {
+	if len(args) <= 1 {
 		common_chat.MainStart("main.Run", Run)
 	} else {
 		switch args[1] {

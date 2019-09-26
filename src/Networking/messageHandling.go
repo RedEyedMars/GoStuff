@@ -25,7 +25,8 @@ func DifferentiateMessage(incomingMsg []byte) (string, []byte) {
 	return string(result[1]), result[2]
 }
 func GetIPFromAddress(ipAddress string) (string, int) {
-	result := reCommandMsg.FindStringSubmatch(ipAddress)
+
+	result := reIPvPort.FindStringSubmatch(ipAddress)
 	if port, err := strconv.Atoi(result[2]); err != nil {
 		return result[1], -1
 	} else {

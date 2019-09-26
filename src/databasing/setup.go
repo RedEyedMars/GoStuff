@@ -27,6 +27,9 @@ var Channels map[string]*Channel
 var MembersByName map[string]*Member
 var MembersByIp map[string]*Member
 
+var reSanatizeDatabase *regexp.Regexp
+var reIsName *regexp.Regexp
+
 func Setup() {
 	dbQueries = make(map[string]string)
 	dbQueryArgumentLength = make(map[string]int)
@@ -69,15 +72,15 @@ func Start() {
 		if db, err := sql.Open("mysql", dnsStr); err != nil {
 			log.Fatal(err)
 		} else {
-			defer db.Close()
 			if err = db.Ping(); err != nil {
 				log.Fatal(err)
 			}
 			Events.GoFuncEvent("databasing.StartMessageListening", func() { StartMessageListening(db) })
-			Logger.Verbose <- Logger.Msg{"Closing database..."}
+
 		}
 	})
 }
+
 func StartMessageListening(db *sql.DB) {
 	for {
 		select {
@@ -112,7 +115,7 @@ func StartMessageListening(db *sql.DB) {
 			if rows, err := db.Query(request.Query()); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChannelRequest.Query"}
 			} else {
-				Events.GoFuncEvent("databasing.channels.Parse", func() { request.Parse(rows) })
+				Events.GoFuncEvent("databasing.channels.ParseNew", func() { request.ParseNew(rows) })
 			}
 		case request := <-ChannelNamesRequests:
 			if rows, err := db.Query(request.Query()); err != nil {
@@ -121,13 +124,40 @@ func StartMessageListening(db *sql.DB) {
 				Events.GoFuncEvent("databasing.channels.ParseNames", func() { request.ParseNames(rows) })
 			}
 		default:
+			Logger.Verbose <- Logger.Msg{"Closing database..."}
+			db.Close()
 			return
 		}
 	}
 }
 
-var reSanatizeDatabase *regexp.Regexp
-var reIsName *regexp.Regexp
+func SetupServer() {
+	//LoadAllMembers()
+	RequestChannel("AllNames")
+
+}
+
+func SetupMember(ip string) *Member {
+	member, present := MembersByIp[ip]
+	if !present {
+		member, present = <-RequestMember("ByIp", ip)
+		member = NewMember(ip)
+	}
+	for channel := range RequestChannelsByName("Members", member.Name) {
+		channel.Members[member.Name] = member
+	}
+	return member
+}
+
+func Close() {
+	close(ResourceRequests)
+	close(ResourcesRequests)
+	close(ChatMsgRequests)
+	close(MemberRequests)
+	close(MemberNamesRequests)
+	close(ChannelRequests)
+	close(ChannelNamesRequests)
+}
 
 func IsName(input string) bool {
 	return reIsName.FindString(input) == input

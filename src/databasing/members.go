@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math/rand"
 	"strconv"
 )
 
@@ -24,6 +25,14 @@ type Member struct {
 type DBMemberResponse struct {
 	Query   func() string
 	Members chan *Member
+}
+
+func NewMember(ip string) *Member {
+	return &Member{
+		Name: fmt.Sprintf("%s%s%s", Adverbs[int64(rand.NormFloat64()*float64(len(Adverbs)))],
+			Adjectives[int64(rand.NormFloat64()*float64(len(Adjectives)))],
+			Nouns[int64(rand.NormFloat64()*float64(len(Nouns)))]),
+		IP: ip}
 }
 
 func NewMemberResponse(name string, arg ...string) *DBMemberResponse {
@@ -65,7 +74,7 @@ func RequestMember(name string, args ...string) <-chan *Member {
 	MemberRequests <- request
 	return request.Members
 }
-func RequestMembersName(name string, args ...string) <-chan *Member {
+func RequestMembersByName(name string, args ...string) <-chan *Member {
 	request := NewMemberResponseArr(name, args)
 	MemberNamesRequests <- request
 	return request.Members
