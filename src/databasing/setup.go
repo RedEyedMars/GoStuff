@@ -62,10 +62,9 @@ func defineQuery(name string, query string, argLength int) {
 }
 func Run(Shutdown chan bool) {
 	Logger.Verbose <- Logger.Msg{"Setting up database..."}
-	Events.GoFuncEvent("databasing.StartDatabase", func() {
-		Setup()
-		StartDatabase(Shutdown)
-	})
+	Events.GoFuncEvent("databasing.Run", func() {
+		Events.FuncEvent("databasing.Setup", Setup)
+		Events.FuncEvent("databasing.StartDatabase", func() { StartDatabase(Shutdown) })
 }
 
 func StartDatabase(Shutdown chan bool) {
@@ -85,7 +84,7 @@ func StartDatabase(Shutdown chan bool) {
 		if err = db.Ping(); err != nil {
 			log.Fatal(err)
 		}
-		Events.GoFuncEvent("databasing.StartMessageListening", func() { StartMessageListening(db) })
+		Events.FuncEvent("databasing.StartMessageListening", func() { StartMessageListening(db) })
 
 	}
 
