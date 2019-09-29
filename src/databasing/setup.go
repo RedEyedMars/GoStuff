@@ -3,11 +3,12 @@ package databasing
 import (
 	"Events"
 	"Logger"
-	"common_chat"
 	"database/sql"
 	"fmt"
 	"log"
 	"regexp"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var dbQueries map[string]string
@@ -59,25 +60,47 @@ func defineQuery(name string, query string, argLength int) {
 	dbQueries[name] = query
 	dbQueryArgumentLength[name] = argLength
 }
-func Start() {
-	defer common_chat.MainEnd()
+func Run(Shutdown chan bool) {
 	Logger.Verbose <- Logger.Msg{"Setting up database..."}
-	Events.FuncEvent("databasing.StartDatabase", func() {
-		dbName := "chat_msg"
-		dbEndpoint := "chat-service.c84g8cm4el5a.us-west-2.rds.amazonaws.com"
+	Events.GoFuncEvent("databasing.StartDatabase", func() {
+		StartDatabase(Shutdown)
+	})
+}
 
-		dnsStr := fmt.Sprintf("%s:%s@tcp(%s)/%s?tls=true", "chat_root", dbPassword, dbEndpoint, dbName)
+func StartDatabase(Shutdown chan bool) {
+	dbUser := "chat_root"
+	dbName := "chat_msg"
+	dbEndpoint := "chat-service.c84g8cm4el5a.us-west-2.rds.amazonaws.com"
 
-		// Use db to perform SQL operations on database
-		if db, err := sql.Open("mysql", dnsStr); err != nil {
+	// Create the MySQL DNS string for the DB connection
+	// user:password@protocol(endpoint)/dbname?<params>
+
+	dnsStr := fmt.Sprintf("%s:%s@tcp(%s)/%s", dbUser, dbPassword, dbEndpoint, dbName)
+
+	// Use db to perform SQL operations on database
+	if db, err := sql.Open("mysql", dnsStr); err != nil {
+		log.Fatal(err)
+	} else {
+		if err = db.Ping(); err != nil {
 			log.Fatal(err)
-		} else {
-			if err = db.Ping(); err != nil {
-				log.Fatal(err)
-			}
-			Events.GoFuncEvent("databasing.StartMessageListening", func() { StartMessageListening(db) })
-
 		}
+		Events.GoFuncEvent("databasing.StartMessageListening", func() { StartMessageListening(db) })
+
+	}
+
+}
+
+func End() {
+	Events.FuncEvent("Databasing.End", func() {
+		close(ResourceRequests)
+		close(ResourcesRequests)
+		close(ResourcesRequests)
+		close(ResourcesRequests)
+		close(ChatMsgRequests)
+		close(MemberRequests)
+		close(MemberNamesRequests)
+		close(ChannelRequests)
+		close(ChannelNamesRequests)
 	})
 }
 

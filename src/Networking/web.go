@@ -3,15 +3,14 @@ package Networking
 import (
 	"Events"
 	"Logger"
-	"bufio"
 	"context"
 	"flag"
 	"net/http"
-	"os"
 	"time"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
+var Shutdown chan bool
 
 func setupAdminCommands() {
 	adminCommands = make(map[string]Events.Event)
@@ -31,13 +30,19 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "src/Networking/home.html")
 }
 
-var Shutdown chan bool
+var onClose func()
 
-func StartWebClient() <-chan bool {
+func End() {
+	if onClose != nil {
+		Events.FuncEvent("Networking.End", onClose)
+	}
+}
+func StartWebClient(toClose chan bool) {
+	Shutdown = toClose
+
 	setupAdminCommands()
 	setupNetworkingRegex()
-	done := make(chan bool, 1)
-	Shutdown = make(chan bool, 1)
+
 	flag.Parse()
 	srv := &http.Server{Addr: ":8080"}
 	registry := newRegistry()
@@ -50,26 +55,12 @@ func StartWebClient() <-chan bool {
 		err := http.ListenAndServe(*addr, nil)
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "Networking.ListenAndServe"}
 	})
-	Events.GoFuncEvent("Networking.ListenForShutdown", func() {
-		<-Shutdown
+	onClose = func() {
 		err := srv.Shutdown(context.Background())
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "Networking.Shutdown"}
-		done <- true
-	})
+	}
 	go func() {
 		time.Sleep(1 * time.Hour)
-		Shutdown <- true
+		close(Shutdown)
 	}()
-
-	go func() {
-		for {
-			reader := bufio.NewReader(os.Stdin)
-			text, _ := reader.ReadString('\n')
-			if text[:4] == "exit" {
-				Shutdown <- true
-				break
-			}
-		}
-	}()
-	return done
 }

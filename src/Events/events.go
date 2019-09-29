@@ -30,3 +30,8 @@ func HandleEvent(event Event) {
 	event.Run()
 	Logger.Event <- Logger.Msg{event.GetName(), "Finish"}
 }
+
+func DoneFuncEvent(name string, Function1 func(chan bool), Shutdown chan bool) {
+	Logger.Event <- Logger.Msg{"func(" + name + ")", "Begin"}
+	Function1(Shutdown)
+}

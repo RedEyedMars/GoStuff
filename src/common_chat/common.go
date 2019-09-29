@@ -4,6 +4,8 @@ import (
 	"Config"
 	"Events"
 	"Logger"
+	"bufio"
+	"os"
 )
 
 func Start() {
@@ -12,19 +14,25 @@ func Start() {
 	Logger.Start()
 }
 
-var done chan bool
-
 func Close() {
 	Logger.Close()
 }
 
-func MainStart(name string, f func()) {
-	done = make(chan bool, 1)
+func MainStart(name string, f func(chan bool), end func()) {
 	Start()
-	Events.FuncEvent(name, f)
-	<-done
+	Shutdown := make(chan bool, 1)
+	go func() {
+		for {
+			reader := bufio.NewReader(os.Stdin)
+			text, _ := reader.ReadString('\n')
+			if text[:4] == "exit" {
+				Shutdown <- true
+				break
+			}
+		}
+	}()
+	Events.DoneFuncEvent(name, f, Shutdown)
+	<-Shutdown
+	end()
 	Close()
-}
-func MainEnd() {
-	done <- true
 }

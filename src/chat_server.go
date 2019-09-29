@@ -8,22 +8,22 @@ import (
 	"os"
 )
 
-func Run() {
-	defer common_chat.MainEnd()
-	var webClient <-chan bool
-	Events.FuncEvent("Networking.StartWebClient", func() { webClient = Networking.StartWebClient() })
-	<-webClient
+func Run(Shutdown chan bool) {
+	Events.GoFuncEvent("Networking.StartWebClient", func() {
+		Networking.StartWebClient(Shutdown)
+	})
 }
 func main() {
+
 	args := os.Args
 	if len(args) <= 1 {
-		common_chat.MainStart("main.Run", Run)
+		common_chat.MainStart("main.Run", Run, Networking.End)
 	} else {
 		switch args[1] {
 		case "chat_service":
-			common_chat.MainStart("main.Run", Run)
+			common_chat.MainStart("main.Run", Run, Networking.End)
 		case "setup_database":
-			common_chat.MainStart("databasing.Setup", databasing.Start)
+			common_chat.MainStart("databasing.Setup", databasing.Run, databasing.End)
 		}
 	}
 }
