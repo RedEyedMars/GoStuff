@@ -65,6 +65,7 @@ func Run(Shutdown chan bool) {
 	Events.GoFuncEvent("databasing.Run", func() {
 		Events.FuncEvent("databasing.Setup", Setup)
 		Events.FuncEvent("databasing.StartDatabase", func() { StartDatabase(Shutdown) })
+	})
 }
 
 func StartDatabase(Shutdown chan bool) {
