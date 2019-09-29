@@ -85,14 +85,24 @@ func StartDatabase(Shutdown chan bool) {
 		if err = db.Ping(); err != nil {
 			log.Fatal(err)
 		}
+
+		onClose = func() {
+			Logger.Verbose <- Logger.Msg{"Closing database..."}
+			db.Close()
+		}
 		Events.FuncEvent("databasing.StartMessageListening", func() { StartMessageListening(db) })
 
 	}
 
 }
 
+var onClose func()
+
 func End() {
 	Events.FuncEvent("Databasing.End", func() {
+		if onClose != nil {
+			onClose()
+		}
 		close(ResourceRequests)
 		close(ResourcesRequests)
 		close(ChatMsgRequests)
@@ -145,10 +155,6 @@ func StartMessageListening(db *sql.DB) {
 			} else {
 				Events.GoFuncEvent("databasing.channels.ParseNames", func() { request.ParseNames(rows) })
 			}
-		default:
-			Logger.Verbose <- Logger.Msg{"Closing database..."}
-			db.Close()
-			return
 		}
 	}
 }
