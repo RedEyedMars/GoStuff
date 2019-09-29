@@ -110,6 +110,7 @@ func End() {
 		close(MemberNamesRequests)
 		close(ChannelRequests)
 		close(ChannelNamesRequests)
+
 	})
 }
 
@@ -117,39 +118,60 @@ func StartMessageListening(db *sql.DB) {
 	for {
 		select {
 		case request := <-ResourceRequests:
+			if request == nil {
+				return
+			}
 			row := db.QueryRow(request.Query())
 			Events.GoFuncEvent("databasing.Resources.Parse", func() { request.Parse(row) })
 		case request := <-ResourcesRequests:
+			if request == nil {
+				return
+			}
 			if rows, err := db.Query(request.Query()); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ResourceRequest.Query"}
 			} else {
 				Events.GoFuncEvent("databasing.Resources.Parse", func() { request.ParseAll(rows) })
 			}
 		case request := <-ChatMsgRequests:
+			if request == nil {
+				return
+			}
 			if rows, err := db.Query(request.Query()); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChatMsgRequest.Query"}
 			} else {
 				Events.GoFuncEvent("databasing.chatmgs.Parse", func() { request.Parse(rows) })
 			}
 		case request := <-MemberRequests:
+			if request == nil {
+				return
+			}
 			if rows, err := db.Query(request.Query()); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.MemberRequest.Query"}
 			} else {
 				Events.GoFuncEvent("databasing.members.Parse", func() { request.Parse(rows) })
 			}
 		case request := <-MemberNamesRequests:
+			if request == nil {
+				return
+			}
 			if rows, err := db.Query(request.Query()); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.MemberRequest.Query"}
 			} else {
 				Events.GoFuncEvent("databasing.members.ParseNames", func() { request.ParseNames(rows) })
 			}
 		case request := <-ChannelRequests:
+			if request == nil {
+				return
+			}
 			if rows, err := db.Query(request.Query()); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChannelRequest.Query"}
 			} else {
 				Events.GoFuncEvent("databasing.channels.ParseNew", func() { request.ParseNew(rows) })
 			}
 		case request := <-ChannelNamesRequests:
+			if request == nil {
+				return
+			}
 			if rows, err := db.Query(request.Query()); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChannelRequest.Query"}
 			} else {
