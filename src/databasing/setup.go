@@ -63,6 +63,7 @@ func defineQuery(name string, query string, argLength int) {
 func Run(Shutdown chan bool) {
 	Logger.Verbose <- Logger.Msg{"Setting up database..."}
 	Events.GoFuncEvent("databasing.StartDatabase", func() {
+		Setup()
 		StartDatabase(Shutdown)
 	})
 }
