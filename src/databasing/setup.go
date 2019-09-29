@@ -3,6 +3,7 @@ package databasing
 import (
 	"Events"
 	"Logger"
+	"Networking"
 	"database/sql"
 	"fmt"
 	"log"
@@ -34,6 +35,8 @@ var reIsName *regexp.Regexp
 func Setup() {
 	dbQueries = make(map[string]string)
 	dbQueryArgumentLength = make(map[string]int)
+
+	Networking.SetupAdminCommands()
 
 	ResourceRequests = make(chan *DBResourceResponse, 16)
 	ResourcesRequests = make(chan *DBResourceResponse, 16)
