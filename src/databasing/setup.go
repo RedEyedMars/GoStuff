@@ -95,8 +95,6 @@ func End() {
 	Events.FuncEvent("Databasing.End", func() {
 		close(ResourceRequests)
 		close(ResourcesRequests)
-		close(ResourcesRequests)
-		close(ResourcesRequests)
 		close(ChatMsgRequests)
 		close(MemberRequests)
 		close(MemberNamesRequests)
