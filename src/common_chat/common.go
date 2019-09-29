@@ -4,6 +4,7 @@ import (
 	"Config"
 	"Events"
 	"Logger"
+	"Networking"
 	"bufio"
 	"os"
 )
@@ -28,6 +29,8 @@ func MainStart(name string, f func(chan bool), end func()) {
 			if text[:4] == "exit" {
 				Shutdown <- true
 				break
+			} else {
+				Networking.HandleAdminCommand(text)
 			}
 		}
 	}()

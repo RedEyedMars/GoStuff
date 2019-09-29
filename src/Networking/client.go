@@ -163,6 +163,7 @@ const (
 
 var mode = client
 var adminCommands map[string]Events.Event
+var adminArgs []string
 
 func (c *Client) handleMessages(registry *ClientRegistry) {
 	for {
@@ -198,10 +199,9 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 					c.send <- []byte("{admin_msg}Access Denied!")
 					mode = client
 				}
-			default:
+			case "/":
 				if mode == admin {
-
-					Events.HandleEvent(adminCommands[string(msg)])
+					HandleAdminCommand(string(msg))
 				}
 			}
 			//default:

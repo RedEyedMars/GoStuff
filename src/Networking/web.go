@@ -4,17 +4,36 @@ import (
 	"Events"
 	"Logger"
 	"context"
+	"databasing"
 	"flag"
 	"net/http"
+	"strings"
 	"time"
 )
 
 var addr = flag.String("addr", ":8080", "http service address")
 var Shutdown chan bool
 
-func setupAdminCommands() {
-	adminCommands = make(map[string]Events.Event)
-	adminCommands["exit"] = &Events.Function{Name: "Admin!Exit", Function: func() { Shutdown <- true }}
+func SetupAdminCommands() {
+	if adminCommands == nil {
+		adminCommands = make(map[string]Events.Event)
+		adminCommands["exit"] = &Events.Function{Name: "Admin!Exit", Function: func() { Shutdown <- true }}
+		adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember", Function: func() {
+			if adminArgs != nil {
+				memberIp := adminArgs[0]
+				databasing.NewMember(memberIp)
+			}
+		}}
+	}
+}
+func HandleAdminCommand(msg string) {
+	splice := strings.Split(msg, " ")
+	if len(splice) == 1 {
+		Events.HandleEvent(adminCommands[msg])
+	} else {
+		adminArgs = splice[1:]
+		Events.HandleEvent(adminCommands[splice[0]])
+	}
 }
 
 func serveHome(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +59,7 @@ func End() {
 func StartWebClient(toClose chan bool) {
 	Shutdown = toClose
 
-	setupAdminCommands()
+	SetupAdminCommands()
 	setupNetworkingRegex()
 
 	flag.Parse()
