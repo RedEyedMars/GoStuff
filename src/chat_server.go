@@ -17,13 +17,13 @@ func main() {
 
 	args := os.Args
 	if len(args) <= 1 {
-		common_chat.MainStart("main.Run", Run, Networking.End)
+		common_chat.MainStart("main.Run", Run, Networking.HandleAdminCommand, Networking.End)
 	} else {
 		switch args[1] {
 		case "chat_service":
-			common_chat.MainStart("main.Run", Run, Networking.End)
+			common_chat.MainStart("main.Run", Run, Networking.HandleAdminCommand, Networking.End)
 		case "setup_database":
-			common_chat.MainStart("databasing.Setup", databasing.Run, databasing.End)
+			common_chat.MainStart("databasing.Setup", databasing.Run, databasing.HandleAdminCommand, databasing.End)
 		}
 	}
 }

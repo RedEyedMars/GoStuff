@@ -4,8 +4,8 @@ import (
 	"Events"
 	"Logger"
 	"context"
-	"databasing"
 	"flag"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -18,12 +18,13 @@ func SetupAdminCommands() {
 	if adminCommands == nil {
 		adminCommands = make(map[string]Events.Event)
 		adminCommands["exit"] = &Events.Function{Name: "Admin!Exit", Function: func() { Shutdown <- true }}
-		adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember", Function: func() {
+		/*adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember", Function: func() {
 			if adminArgs != nil {
 				memberIp := adminArgs[0]
 				databasing.NewMember(memberIp)
 			}
 		}}
+		*/
 	}
 }
 func HandleAdminCommand(msg string) {
@@ -32,6 +33,7 @@ func HandleAdminCommand(msg string) {
 		Events.HandleEvent(adminCommands[msg])
 	} else {
 		adminArgs = splice[1:]
+		fmt.Println(splice[0])
 		Events.HandleEvent(adminCommands[splice[0]])
 	}
 }

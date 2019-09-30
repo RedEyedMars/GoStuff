@@ -3,11 +3,11 @@ package databasing
 import (
 	"Events"
 	"Logger"
-	"Networking"
 	"database/sql"
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -32,11 +32,37 @@ var MembersByIp map[string]*Member
 var reSanatizeDatabase *regexp.Regexp
 var reIsName *regexp.Regexp
 
+var adminCommands map[string]Events.Event
+var adminArgs []string
+
+func SetupAdminCommands() {
+	if adminCommands == nil {
+		adminCommands = make(map[string]Events.Event)
+		//adminCommands["exit"] = &Events.Function{Name: "Admin!Exit", Function: func() { Shutdown <- true }}
+		adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember", Function: func() {
+			if adminArgs != nil {
+				memberIp := adminArgs[0]
+				NewMember(memberIp)
+			}
+		}}
+
+	}
+}
+func HandleAdminCommand(msg string) {
+	splice := strings.Split(msg, " ")
+	if len(splice) == 1 {
+		Events.HandleEvent(adminCommands[msg])
+	} else {
+		adminArgs = splice[1:]
+		fmt.Println(splice[0])
+		Events.HandleEvent(adminCommands[splice[0]])
+	}
+}
 func Setup() {
 	dbQueries = make(map[string]string)
 	dbQueryArgumentLength = make(map[string]int)
 
-	Networking.SetupAdminCommands()
+	SetupAdminCommands()
 
 	ResourceRequests = make(chan *DBResourceResponse, 16)
 	ResourcesRequests = make(chan *DBResourceResponse, 16)

@@ -4,7 +4,6 @@ import (
 	"Config"
 	"Events"
 	"Logger"
-	"Networking"
 	"bufio"
 	"os"
 )
@@ -19,7 +18,7 @@ func Close() {
 	Logger.Close()
 }
 
-func MainStart(name string, f func(chan bool), end func()) {
+func MainStart(name string, f func(chan bool), adminCommand func(string), end func()) {
 	Start()
 	Shutdown := make(chan bool, 1)
 	go func() {
@@ -30,7 +29,7 @@ func MainStart(name string, f func(chan bool), end func()) {
 				Shutdown <- true
 				break
 			} else {
-				Networking.HandleAdminCommand(text)
+				adminCommand(text)
 			}
 		}
 	}()
