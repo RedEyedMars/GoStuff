@@ -29,9 +29,9 @@ type DBMemberResponse struct {
 
 func NewMember(ip string) *Member {
 	return &Member{
-		Name: fmt.Sprintf("%s%s%s", Adverbs[int64(rand.NormFloat64()*float64(len(Adverbs)))],
+		Name: fmt.Sprintf("%s", Adverbs[int64(rand.NormFloat64()*float64(len(Adverbs)))]/*,
 			Adjectives[int64(rand.NormFloat64()*float64(len(Adjectives)))],
-			Nouns[int64(rand.NormFloat64()*float64(len(Nouns)))]),
+			Nouns[int64(rand.NormFloat64()*float64(len(Nouns)))]*/),
 		IP: ip}
 }
 
