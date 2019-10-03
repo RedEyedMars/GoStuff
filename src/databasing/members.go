@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"math/rand"
 	"strconv"
 )
@@ -29,12 +28,11 @@ type DBMemberResponse struct {
 }
 
 func NewMember(ip string) *Member {
-	log.Fatal(fmt.Sprintf("%d", int64(rand.NormFloat64()*float64(len(Adverbs)))))
 	return &Member{
-		Name: fmt.Sprintf("%s", Adverbs[int64(rand.NormFloat64()*float64(len(Adverbs)))]), /*,
-		Adjectives[int64(rand.NormFloat64()*float64(len(Adjectives)))],
-		Nouns[int64(rand.NormFloat64()*float64(len(Nouns)))]*/ //),
-		IP:                                                    ip}
+		Name: fmt.Sprintf("%s%s%s", Adverbs[rand.Intn(len(Adverbs))],
+			Adjectives[rand.Intn(len(Adjectives))],
+			Nouns[rand.Intn(len(Nouns))]),
+		IP: ip}
 }
 
 func NewMemberResponse(name string, arg ...string) *DBMemberResponse {
