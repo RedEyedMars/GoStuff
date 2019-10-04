@@ -7,6 +7,19 @@ import (
 	"time"
 )
 
+/**
++------------------------------+------------------+------+-----+---------+----------------+
+| Field                        | Type             | Null | Key | Default | Extra          |
++------------------------------+------------------+------+-----+---------+----------------+
+| msg                          | text             | NO   | MUL | NULL    |                |
+| sender                       | varchar(255)     | NO   |     | NULL    |                |
+| channel                      | varchar(255)     | YES  |     | NULL    |                |
+| time_sent                    | timestamp        | NO   |     | NULL    |                |
+| number_of_required_resources | tinyint(4)       | YES  |     | NULL    |                |
+| resources                    | varchar(255)     | YES  |     | NULL    |                |
+| id                           | int(10) unsigned | NO   | PRI | NULL    | auto_increment |
++------------------------------+------------------+------+-----+---------+----------------+
+**/
 type ChatMsg struct {
 	Text      string
 	Channel   string
@@ -42,8 +55,8 @@ func NewChatMsgResponseArr(name string, args []string) *DBChatMsgResponse {
 }
 
 func SetupChatMsgs(db *sql.DB) {
-	defineQuery(db, "ChatMsg_RecentOnChannel", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM made_orders WHERE channel = ? AND timestamp >= NOW() - INTERVAL 24 HOUR  LIMIT 16 ;`)
-	defineQuery(db, "ChatMsg_ByIdOnChannel", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM made_orders WHERE id < ? AND channel = ?  LIMIT 16 ;`)
+	defineQuery(db, "ChatMsg_RecentOnChannel", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM messages WHERE channel = ? AND timestamp >= NOW() - INTERVAL 24 HOUR  LIMIT 16 ;`)
+	defineQuery(db, "ChatMsg_ByIdOnChannel", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM messages WHERE id < ? AND channel = ?  LIMIT 16 ;`)
 }
 func RequestChatMsg(name string, args ...string) <-chan ChatMsg {
 	request := NewChatMsgResponseArr(name, args)
