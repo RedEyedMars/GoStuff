@@ -4,9 +4,6 @@ import (
 	"Events"
 	"Logger"
 	"database/sql"
-	"errors"
-	"fmt"
-	"strconv"
 	"time"
 )
 
@@ -31,41 +28,22 @@ func (cm *ChatMsg) LoadResources() {
 }
 
 type DBChatMsgResponse struct {
-	Query    func() string
+	Query    func() (*sql.Rows, error)
 	ChatMsgs chan ChatMsg
 }
 
 func NewChatMsgResponse(name string, arg ...string) *DBChatMsgResponse {
 	return NewChatMsgResponseArr(name, arg)
 }
-func NewChatMsgResponseArr(name string, arg []string) *DBChatMsgResponse {
-	name = "ChatMsg_" + name
-	switch dbQueryArgumentLength[name] {
-	case 0:
-		return &DBChatMsgResponse{
-			Query:    func() string { return dbQueries[name] },
-			ChatMsgs: make(chan ChatMsg, 1)}
-	case 1:
-		return &DBChatMsgResponse{
-			Query:    func() string { return fmt.Sprintf(dbQueries[name], arg[0]) },
-			ChatMsgs: make(chan ChatMsg, 1)}
-	case 2:
-		return &DBChatMsgResponse{
-			Query:    func() string { return fmt.Sprintf(dbQueries[name], arg[0], arg[1]) },
-			ChatMsgs: make(chan ChatMsg, 1)}
-	case 3:
-		return &DBChatMsgResponse{
-			Query:    func() string { return fmt.Sprintf(dbQueries[name], arg[0], arg[1], arg[2]) },
-			ChatMsgs: make(chan ChatMsg, 1)}
-	default:
-		Logger.Error <- Logger.ErrMsg{Err: errors.New(name + "has to many arguments:" + strconv.Itoa(dbQueryArgumentLength[name])), Status: "databasing.ChatMsg.NewChatMsgResponse"}
-		return nil
-	}
+func NewChatMsgResponseArr(name string, args []string) *DBChatMsgResponse {
+	return &DBChatMsgResponse{
+		Query:    func() (*sql.Rows, error) { return dbQueries["ChatMsg_"+name].Query(args) },
+		ChatMsgs: make(chan ChatMsg, 1)}
 }
 
-func SetupChatMsgs() {
-	defineQuery("ChatMsg_RecentOnChannel", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM made_orders WHERE channel = '%s' AND timestamp >= NOW() - INTERVAL 24 HOUR  LIMIT 16 ;`, 1)
-	defineQuery("ChatMsg_ByIdOnChannel", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM made_orders WHERE id < %s AND channel = '%s'  LIMIT 16 ;`, 2)
+func SetupChatMsgs(db *sql.DB) {
+	defineQuery(db, "ChatMsg_RecentOnChannel", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM made_orders WHERE channel = ? AND timestamp >= NOW() - INTERVAL 24 HOUR  LIMIT 16 ;`)
+	defineQuery(db, "ChatMsg_ByIdOnChannel", `SELECT msg,sender,channel,time_sent,number_of_resources,resources,id FROM made_orders WHERE id < ? AND channel = ?  LIMIT 16 ;`)
 }
 func RequestChatMsg(name string, args ...string) <-chan ChatMsg {
 	request := NewChatMsgResponseArr(name, args)

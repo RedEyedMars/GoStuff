@@ -3,9 +3,6 @@ package databasing
 import (
 	"Logger"
 	"database/sql"
-	"errors"
-	"fmt"
-	"strconv"
 )
 
 type Resource struct {
@@ -15,49 +12,42 @@ type Resource struct {
 }
 
 type DBResourceResponse struct {
-	Query     func() string
+	QueryRow  func() *sql.Row
+	Resources chan *Resource
+}
+
+type DBResourcesResponse struct {
+	Query     func() (*sql.Rows, error)
 	Resources chan *Resource
 }
 
 func NewResourceResponse(name string, arg ...string) *DBResourceResponse {
 	return NewResourceResponseArr(name, arg)
 }
-func NewResourceResponseArr(name string, arg []string) *DBResourceResponse {
+func NewResourceResponseArr(name string, args []string) *DBResourceResponse {
 	name = "Resource_" + name
-	switch dbQueryArgumentLength[name] {
-	case 0:
-		return &DBResourceResponse{
-			Query:     func() string { return dbQueries[name] },
-			Resources: make(chan *Resource, 1)}
-	case 1:
-		return &DBResourceResponse{
-			Query:     func() string { return fmt.Sprintf(dbQueries[name], arg[0]) },
-			Resources: make(chan *Resource, 1)}
-	case 2:
-		return &DBResourceResponse{
-			Query:     func() string { return fmt.Sprintf(dbQueries[name], arg[0], arg[1]) },
-			Resources: make(chan *Resource, 1)}
-	case 3:
-		return &DBResourceResponse{
-			Query:     func() string { return fmt.Sprintf(dbQueries[name], arg[0], arg[1], arg[2]) },
-			Resources: make(chan *Resource, 1)}
-	default:
-		Logger.Error <- Logger.ErrMsg{Err: errors.New(name + "has to many arguments:" + strconv.Itoa(dbQueryArgumentLength[name])), Status: "resources.NewResourceResponse"}
-		return nil
-	}
+	return &DBResourceResponse{
+		QueryRow:  func() *sql.Row { return dbQueries["Resource_"+name].QueryRow(args) },
+		Resources: make(chan *Resource, 1)}
+}
+func NewResourcesResponseArr(name string, args []string) *DBResourcesResponse {
+	name = "Resource_" + name
+	return &DBResourcesResponse{
+		Query:     func() (*sql.Rows, error) { return dbQueries["Resource_"+name].Query(args) },
+		Resources: make(chan *Resource, 1)}
 }
 
-func SetupResources() {
-	defineQuery("Resources_ByName", `SELECT name, source, abv FROM resources WHERE name='%s' ;`, 1)
-	defineQuery("Resources_ByAbv", `SELECT name, source, abv FROM resources WHERE abv='%s' ;`, 1)
-	defineQuery("Resources_BySource", `SELECT name, source, abv FROM resources WHERE source='%s' ;`, 1)
+func SetupResources(db *sql.DB) {
+	defineQuery(db, "Resources_ByName", `SELECT name, source, abv FROM resources WHERE name=? ;`)
+	defineQuery(db, "Resources_ByAbv", `SELECT name, source, abv FROM resources WHERE abv=? ;`)
+	defineQuery(db, "Resources_BySource", `SELECT name, source, abv FROM resources WHERE source=? ;`)
 }
 func RequestResource(name string, args ...string) <-chan *Resource {
 	request := NewResourceResponseArr(name, args)
 	ResourceRequests <- request
 	return request.Resources
 }
-func (r *DBResourceResponse) ParseAll(rows *sql.Rows) {
+func (r *DBResourcesResponse) Parse(rows *sql.Rows) {
 	for rows.Next() {
 		var (
 			name   string

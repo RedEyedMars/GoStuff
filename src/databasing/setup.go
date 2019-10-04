@@ -12,16 +12,28 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-var dbQueries map[string]string
-var dbQueryArgumentLength map[string]int
+/**
++---------------------+
+| Tables_in_chat_msg  |
++---------------------+
+| channels_names      |
+| client_names        |
+| messages            |
+| resource_allocation |
+| resources           |
++---------------------+
+**/
+
+var dbQueries map[string]*sql.Stmt
 
 var ResourceRequests chan *DBResourceResponse
-var ResourcesRequests chan *DBResourceResponse
+var ResourcesRequests chan *DBResourcesResponse
 var ChatMsgRequests chan *DBChatMsgResponse
 var MemberRequests chan *DBMemberResponse
 var MemberNamesRequests chan *DBMemberResponse
 var ChannelRequests chan *DBChannelResponse
 var ChannelNamesRequests chan *DBChannelResponse
+var ActionRequests chan *DBActionResponse
 
 var LoadedResources map[string]*Resource
 var Channels map[string]*Channel
@@ -35,6 +47,11 @@ var reIsName *regexp.Regexp
 var adminCommands map[string]Events.Event
 var adminArgs []string
 
+type DBActionResponse struct {
+	Exec       func() (sql.Result, error)
+	Successful chan bool
+}
+
 func SetupAdminCommands() {
 	if adminCommands == nil {
 		adminCommands = make(map[string]Events.Event)
@@ -42,7 +59,7 @@ func SetupAdminCommands() {
 		adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember", Function: func() {
 			if adminArgs != nil {
 				memberIp := adminArgs[0]
-				NewMember(memberIp)
+				RequestMemberAction("AddMember", NewMember(memberIp))
 			}
 		}}
 
@@ -54,40 +71,37 @@ func HandleAdminCommand(msg string) {
 		Events.HandleEvent(adminCommands[msg])
 	} else {
 		adminArgs = splice[1:]
-		fmt.Println(splice[0])
 		Events.HandleEvent(adminCommands[splice[0]])
 	}
 }
 func Setup() {
-	dbQueries = make(map[string]string)
-	dbQueryArgumentLength = make(map[string]int)
+	dbQueries = make(map[string]*sql.Stmt)
 
 	SetupAdminCommands()
 
 	ResourceRequests = make(chan *DBResourceResponse, 16)
-	ResourcesRequests = make(chan *DBResourceResponse, 16)
+	ResourcesRequests = make(chan *DBResourcesResponse, 16)
 	ChatMsgRequests = make(chan *DBChatMsgResponse, 16)
 	MemberRequests = make(chan *DBMemberResponse, 16)
 	MemberNamesRequests = make(chan *DBMemberResponse, 16)
 	ChannelRequests = make(chan *DBChannelResponse, 16)
 	ChannelNamesRequests = make(chan *DBChannelResponse, 16)
+	ActionRequests = make(chan *DBActionResponse, 32)
 
 	LoadedResources = make(map[string]*Resource)
 	Channels = make(map[string]*Channel)
 	MembersByName = make(map[string]*Member)
 	MembersByIp = make(map[string]*Member)
 
-	Events.FuncEvent("databasing.SetupResources", SetupResources)
-	Events.FuncEvent("databasing.SetupChatMsgs", SetupChatMsgs)
-	Events.FuncEvent("databasing.SetupMembers", SetupMembers)
-	Events.FuncEvent("databasing.SetupChannels", SetupChannels)
-
 	reSanatizeDatabase = regexp.MustCompile(`(\n, \r, \, ', ")`)
 	reIsName = regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9_-]*`)
 }
-func defineQuery(name string, query string, argLength int) {
-	dbQueries[name] = query
-	dbQueryArgumentLength[name] = argLength
+func defineQuery(db *sql.DB, name string, query string) {
+	if stmt, err := db.Prepare(query); err != nil {
+		Logger.Error <- Logger.ErrMsg{err, "databasing.defineQuery: Failed to define:" + name}
+	} else {
+		dbQueries[name] = stmt
+	}
 }
 func Run(Shutdown chan bool) {
 	Logger.Verbose <- Logger.Msg{"Setting up database..."}
@@ -119,6 +133,11 @@ func StartDatabase(Shutdown chan bool) {
 			Logger.Verbose <- Logger.Msg{"Closing database..."}
 			db.Close()
 		}
+
+		Events.FuncEvent("databasing.SetupResources", func() { SetupResources(db) })
+		Events.FuncEvent("databasing.SetupResources", func() { SetupChatMsgs(db) })
+		Events.FuncEvent("databasing.SetupResources", func() { SetupMembers(db) })
+		Events.FuncEvent("databasing.SetupResources", func() { SetupChannels(db) })
 		Events.FuncEvent("databasing.StartMessageListening", func() { StartMessageListening(db) })
 
 	}
@@ -139,7 +158,7 @@ func End() {
 		close(MemberNamesRequests)
 		close(ChannelRequests)
 		close(ChannelNamesRequests)
-
+		close(ActionRequests)
 	})
 }
 
@@ -150,22 +169,22 @@ func StartMessageListening(db *sql.DB) {
 			if request == nil {
 				return
 			}
-			row := db.QueryRow(request.Query())
+			row := request.QueryRow()
 			Events.GoFuncEvent("databasing.Resources.Parse", func() { request.Parse(row) })
 		case request := <-ResourcesRequests:
 			if request == nil {
 				return
 			}
-			if rows, err := db.Query(request.Query()); err != nil {
+			if rows, err := request.Query(); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ResourceRequest.Query"}
 			} else {
-				Events.GoFuncEvent("databasing.Resources.Parse", func() { request.ParseAll(rows) })
+				Events.GoFuncEvent("databasing.Resources.Parse", func() { request.Parse(rows) })
 			}
 		case request := <-ChatMsgRequests:
 			if request == nil {
 				return
 			}
-			if rows, err := db.Query(request.Query()); err != nil {
+			if rows, err := request.Query(); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChatMsgRequest.Query"}
 			} else {
 				Events.GoFuncEvent("databasing.chatmgs.Parse", func() { request.Parse(rows) })
@@ -174,7 +193,7 @@ func StartMessageListening(db *sql.DB) {
 			if request == nil {
 				return
 			}
-			if rows, err := db.Query(request.Query()); err != nil {
+			if rows, err := request.Query(); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.MemberRequest.Query"}
 			} else {
 				Events.GoFuncEvent("databasing.members.Parse", func() { request.Parse(rows) })
@@ -183,8 +202,8 @@ func StartMessageListening(db *sql.DB) {
 			if request == nil {
 				return
 			}
-			if rows, err := db.Query(request.Query()); err != nil {
-				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.MemberRequest.Query"}
+			if rows, err := request.Query(); err != nil {
+				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.MemberNamesRequest.Query"}
 			} else {
 				Events.GoFuncEvent("databasing.members.ParseNames", func() { request.ParseNames(rows) })
 			}
@@ -192,7 +211,7 @@ func StartMessageListening(db *sql.DB) {
 			if request == nil {
 				return
 			}
-			if rows, err := db.Query(request.Query()); err != nil {
+			if rows, err := request.Query(); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChannelRequest.Query"}
 			} else {
 				Events.GoFuncEvent("databasing.channels.ParseNew", func() { request.ParseNew(rows) })
@@ -201,12 +220,23 @@ func StartMessageListening(db *sql.DB) {
 			if request == nil {
 				return
 			}
-			if rows, err := db.Query(request.Query()); err != nil {
+			if rows, err := request.Query(); err != nil {
 				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChannelRequest.Query"}
 			} else {
 				Events.GoFuncEvent("databasing.channels.ParseNames", func() { request.ParseNames(rows) })
 			}
+		case request := <-ActionRequests:
+			if request == nil {
+				return
+			}
+			if result, err := request.Exec(); err != nil {
+				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChannelRequest.Query"}
+			} else {
+				Events.GoFuncEvent("databasing.setup.Success", func() { request.ParseSuccess(result) })
+			}
+
 		}
+
 	}
 }
 
@@ -246,4 +276,13 @@ func SanatizeDatabaseInput(input string) string {
 	return reSanatizeDatabase.ReplaceAllStringFunc(input, func(match string) string {
 		return "\\" + match
 	})
+}
+
+func (as *DBActionResponse) ParseSuccess(result sql.Result) {
+	if _, err := result.RowsAffected(); err != nil {
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.setup.ParseSuccess"}
+	}
+
+	as.Successful <- true
+	close(as.Successful)
 }
