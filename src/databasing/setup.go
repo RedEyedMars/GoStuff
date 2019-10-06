@@ -230,7 +230,7 @@ func StartMessageListening(db *sql.DB) {
 				return
 			}
 			if result, err := request.Exec(); err != nil {
-				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChannelRequest.Query"}
+				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ActionRequest.Exec"}
 			} else {
 				Events.GoFuncEvent("databasing.setup.Success", func() { request.ParseSuccess(result) })
 			}

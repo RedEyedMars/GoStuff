@@ -56,17 +56,17 @@ func NewMember(ip string) *Member {
 	return member
 }
 
-func NewMemberResponse(name string, arg ...string) *DBMemberResponse {
+func NewMemberResponse(name string, arg ...interface{}) *DBMemberResponse {
 	return NewMemberResponseArr(name, arg)
 }
-func NewMemberResponseArr(name string, args []string) *DBMemberResponse {
+func NewMemberResponseArr(name string, args []interface{}) *DBMemberResponse {
 	return &DBMemberResponse{
-		Query:   func() (*sql.Rows, error) { return dbQueries["Members_"+name].Query(args) },
+		Query:   func() (*sql.Rows, error) { return dbQueries["Members_"+name].Query(args...) },
 		Members: make(chan *Member, 1)}
 }
-func NewMemberActionArr(name string, args []string) *DBActionResponse {
+func NewMemberActionArr(name string, args []interface{}) *DBActionResponse {
 	return &DBActionResponse{
-		Exec:       func() (sql.Result, error) { return dbQueries["Members_"+name].Exec(args) },
+		Exec:       func() (sql.Result, error) { return dbQueries["Members_"+name].Exec(args...) },
 		Successful: make(chan bool, 1)}
 }
 
@@ -79,18 +79,18 @@ func SetupMembers(db *sql.DB) {
 	defineQuery(db, "Members_AddMember", `INSERT INTO client_names VALUES (?,?);`)
 }
 
-func RequestMember(name string, args ...string) <-chan *Member {
+func RequestMember(name string, args ...interface{}) <-chan *Member {
 	request := NewMemberResponseArr(name, args)
 	MemberRequests <- request
 	return request.Members
 }
-func RequestMembersByName(name string, args ...string) <-chan *Member {
+func RequestMembersByName(name string, args ...interface{}) <-chan *Member {
 	request := NewMemberResponseArr(name, args)
 	MemberNamesRequests <- request
 	return request.Members
 }
 func RequestMemberAction(name string, member *Member) <-chan bool {
-	request := NewMemberActionArr(name, []string{member.Name, member.IP})
+	request := NewMemberActionArr(name, []interface{}{member.Name, member.IP})
 	ActionRequests <- request
 	return request.Successful
 }
