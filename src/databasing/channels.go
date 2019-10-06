@@ -29,7 +29,7 @@ func SetupChannels(db *sql.DB) {
 	defineQuery(db, "Channels_All", `SELECT channel_name,member_name,id FROM channels_names ;`)
 	defineQuery(db, "Channels_AllNames", `SELECT channel_name,id FROM channels_names ;`)
 
-	defineQuery(db, "Channels_Members", `SELECT member_name FROM channels_names WHERE chanel_name=? ;`)
+	defineQuery(db, "Channels_Members", `SELECT member_name FROM channels_names WHERE channel_name=? ;`)
 	defineQuery(db, "Members_Channels", `SELECT channel_name FROM channels_names WHERE member_name=? ;`)
 	defineQuery(db, "Channels_Channels", `SELECT channel_name FROM channels_names;`)
 }
