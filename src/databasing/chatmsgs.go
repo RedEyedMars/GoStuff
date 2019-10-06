@@ -55,7 +55,7 @@ func NewChatMsgResponseArr(name string, args []string) *DBChatMsgResponse {
 }
 
 func SetupChatMsgs(db *sql.DB) {
-	defineQuery(db, "ChatMsg_RecentOnChannel", `SELECT msg,sender,channel,time_sent,number_of_required_resources,resources,id FROM messages WHERE channel = ? AND timestamp >= NOW() - INTERVAL 24 HOUR  LIMIT 16 ;`)
+	defineQuery(db, "ChatMsg_RecentOnChannel", `SELECT msg,sender,channel,time_sent,number_of_required_resources,resources,id FROM messages WHERE channel = ? AND time_sent >= NOW() - INTERVAL 24 HOUR  LIMIT 16 ;`)
 	defineQuery(db, "ChatMsg_ByIdOnChannel", `SELECT msg,sender,channel,time_sent,number_of_required_resources,resources,id FROM messages WHERE id < ? AND channel = ?  LIMIT 16 ;`)
 }
 func RequestChatMsg(name string, args ...string) <-chan ChatMsg {
