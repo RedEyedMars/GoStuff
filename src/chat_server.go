@@ -5,7 +5,9 @@ import (
 	"Networking"
 	"common_chat"
 	"databasing"
+	"math/rand"
 	"os"
+	"time"
 )
 
 func Run(Shutdown chan bool) {
@@ -15,6 +17,7 @@ func Run(Shutdown chan bool) {
 }
 func main() {
 
+	rand.Seed(time.Now().UTC().UnixNano())
 	args := os.Args
 	if len(args) <= 1 {
 		common_chat.MainStart("main.Run", Run, Networking.HandleAdminCommand, Networking.End)
