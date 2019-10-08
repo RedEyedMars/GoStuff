@@ -51,9 +51,13 @@ func NewMember(ip string) *Member {
 			Adjectives[rand.Intn(len(Adjectives))],
 			Nouns[rand.Intn(len(Nouns))]),
 		IP: ip}
+	AddMemberToMaps(member)
+	return member
+}
+func AddMemberToMaps(member *Member) {
+	Logger.Verbose <- Logger.Msg{"Add Member: " + member.Name + "; " + member.IP}
 	MembersByName[member.Name] = member
 	MembersByIp[member.IP] = member
-	return member
 }
 
 func NewMemberResponse(name string, arg ...interface{}) *DBMemberResponse {
