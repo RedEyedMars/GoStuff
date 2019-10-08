@@ -118,12 +118,11 @@ if (window["WebSocket"]) {
     appendLog(item);
 }
 
-document.getElementById("popup").style.display = "block";
-    document.getElementById("form").style.display = "none";
+    document.getElementById("popup").style.display = "block";
+    //document.getElementById("form").style.display = "none";
 };
 function pass_done() {
     document.getElementById("popup").style.display = "none";
-    document.getElementById("body").style.display = "inline";
     var password = document.getElementById("pass").value;
 
     //DO STUFF WITH PASSWORD HERE
@@ -131,14 +130,15 @@ function pass_done() {
 </script>
 </head>
 <body>
-<form id="popup">
-  <div>Enter Username:</div>
-  <input id="username" type="text"/>
-  <div>Enter Password:</div>
-  <input id="pass" type="password"/>
-  <button onclick="pass_done()">Done</button>
-</form>
-<div id="log"></div>
+
+<div id="log">
+  <div id="popup">
+    <div>Enter Username:</div>
+    <input id="username" type="text"/>
+    <div>Enter Password:</div>
+    <input id="pass" type="password"/>
+    <button onclick="pass_done()">Done</button>
+  </div></div>
 <form id="form">
 <input type="submit" value="Send" />
 <input type="text" id="msg" size="64"/>
