@@ -54,6 +54,13 @@ func NewMember(ip string) *Member {
 	Events.FuncEvent("databasing.members.AddMemberToMap", func() { AddMemberToMaps(member) })
 	return member
 }
+func NewMemberFull(name string, ip string) *Member {
+	member := &Member{
+		Name: name,
+		IP:   ip}
+	Events.FuncEvent("databasing.members.AddMemberToMap", func() { AddMemberToMaps(member) })
+	return member
+}
 func AddMemberToMaps(member *Member) {
 	Logger.Verbose <- Logger.Msg{"Add Member: " + member.Name + "; " + member.IP}
 	MembersByName[member.Name] = member

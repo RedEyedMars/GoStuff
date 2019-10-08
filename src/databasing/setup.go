@@ -62,6 +62,12 @@ func makeAdminFunc(argCount uint16, f func(...string)) func() {
 				f(adminArgs[0][:len(adminArgs[0])-1])
 			}
 		}
+	case 2:
+		return func() {
+			if adminArgs != nil && len(adminArgs) > 1 {
+				f(adminArgs[0], adminArgs[1][:len(adminArgs[1])-1])
+			}
+		}
 	}
 	return func() {}
 }
@@ -71,8 +77,12 @@ func SetupAdminCommands() {
 		//adminCommands["exit"] = &Events.Function{Name: "Admin!Exit", Function: func() { Shutdown <- true }}
 		adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember", Function: makeAdminFunc(1,
 			func(args ...string) { RequestMemberAction("Add", NewMember(args[0])) })}
+		adminCommands["addMemberFull"] = &Events.Function{Name: "Admin!AddMember_Full", Function: makeAdminFunc(2,
+			func(args ...string) { RequestMemberAction("Add", NewMemberFull(args[0], args[1])) })}
 		adminCommands["removeMember"] = &Events.Function{Name: "Admin!RemoveMember", Function: makeAdminFunc(1,
 			func(args ...string) { RequestMemberAction("Remove", MembersByName[args[0]]) })}
+		adminCommands["removeMemberByIp"] = &Events.Function{Name: "Admin!RemoveMember_IP", Function: makeAdminFunc(1,
+			func(args ...string) { RequestMemberAction("Remove", MembersByIp[args[0]]) })}
 	}
 }
 func HandleAdminCommand(msg string) bool {
