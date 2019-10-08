@@ -84,7 +84,7 @@ func StartWebClient(toClose chan bool) {
 	})
 	http.HandleFunc("/styles.css", func(w http.ResponseWriter, r *http.Request) {
 		Logger.Verbose <- Logger.Msg{"Get stylesheet:" + r.URL.String()}
-		if r.Method != "POST" {
+		if r.Method != "GET" {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
