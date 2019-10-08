@@ -5,7 +5,6 @@ import (
 	"Logger"
 	"context"
 	"flag"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -27,15 +26,26 @@ func SetupAdminCommands() {
 		*/
 	}
 }
-func HandleAdminCommand(msg string) {
+func HandleAdminCommand(msg string) bool {
+
 	splice := strings.Split(msg, " ")
 	if len(splice) == 1 {
-		Events.HandleEvent(adminCommands[msg])
+		if command := adminCommands[msg]; command == nil {
+			return false
+		} else {
+			Events.HandleEvent(command)
+			return true
+		}
 	} else {
-		adminArgs = splice[1:]
-		fmt.Println(splice[0])
-		Events.HandleEvent(adminCommands[splice[0]])
+		if command := adminCommands[splice[0]]; command == nil {
+			return false
+		} else {
+			adminArgs = splice[1:]
+			Events.HandleEvent(command)
+			return true
+		}
 	}
+
 }
 
 func serveHome(w http.ResponseWriter, r *http.Request) {

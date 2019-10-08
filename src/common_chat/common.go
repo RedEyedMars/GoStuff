@@ -18,7 +18,7 @@ func Close() {
 	Logger.Close()
 }
 
-func MainStart(name string, f func(chan bool), adminCommand func(string), end func()) {
+func MainStart(name string, f func(chan bool), adminCommand func(string) bool, end func()) {
 	Start()
 	Shutdown := make(chan bool, 1)
 	go func() {

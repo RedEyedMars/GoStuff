@@ -1,6 +1,7 @@
 package databasing
 
 import (
+	"Events"
 	"Logger"
 	"database/sql"
 	"fmt"
@@ -30,8 +31,7 @@ channels_names
 func LoadAllMembers() {
 
 	for member := range RequestMember("All") {
-		MembersByName[member.Name] = member
-		MembersByIp[member.IP] = member
+		Events.FuncEvent("databasing.members.AddMemberToMap", func() { AddMemberToMaps(member) })
 	}
 }
 
@@ -51,7 +51,7 @@ func NewMember(ip string) *Member {
 			Adjectives[rand.Intn(len(Adjectives))],
 			Nouns[rand.Intn(len(Nouns))]),
 		IP: ip}
-	AddMemberToMaps(member)
+	Events.FuncEvent("databasing.members.AddMemberToMap", func() { AddMemberToMaps(member) })
 	return member
 }
 func AddMemberToMaps(member *Member) {

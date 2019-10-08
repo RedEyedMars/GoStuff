@@ -75,13 +75,23 @@ func SetupAdminCommands() {
 			func(args ...string) { RequestMemberAction("Remove", MembersByName[args[0]]) })}
 	}
 }
-func HandleAdminCommand(msg string) {
+func HandleAdminCommand(msg string) bool {
 	splice := strings.Split(msg, " ")
 	if len(splice) == 1 {
-		Events.HandleEvent(adminCommands[msg])
+		if command := adminCommands[msg]; command == nil {
+			return false
+		} else {
+			Events.HandleEvent(command)
+			return true
+		}
 	} else {
-		adminArgs = splice[1:]
-		Events.HandleEvent(adminCommands[splice[0]])
+		if command := adminCommands[splice[0]]; command == nil {
+			return false
+		} else {
+			adminArgs = splice[1:]
+			Events.HandleEvent(command)
+			return true
+		}
 	}
 }
 func Setup() {
@@ -108,7 +118,7 @@ func Setup() {
 }
 func defineQuery(db *sql.DB, name string, query string) {
 	if stmt, err := db.Prepare(query); err != nil {
-		Logger.Error <- Logger.ErrMsg{err, "databasing.defineQuery: Failed to define:" + name}
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.defineQuery: Failed to define:" + name}
 	} else {
 		dbQueries[name] = stmt
 	}
