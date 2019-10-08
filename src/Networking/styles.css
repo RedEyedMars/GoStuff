@@ -24,7 +24,7 @@ body {
   display:block;
 }
 #chat_div {
-    display:block;
+    display:none;
 }
 #log {
   background: white;
