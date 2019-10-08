@@ -77,7 +77,7 @@ func SetupMembers(db *sql.DB) {
 	defineQuery(db, "Members_ByIp", `SELECT name,ip FROM client_names WHERE ip=? ;`)
 
 	defineQuery(db, "Members_Add", `INSERT INTO client_names VALUES (?,?);`)
-	defineQuery(db, "Members_Remove", `DELETE FROM client_names WHERE (?,?);`)
+	defineQuery(db, "Members_Remove", `DELETE FROM client_names WHERE name = ? and ip = ?;`)
 }
 
 func RequestMember(name string, args ...interface{}) <-chan *Member {
