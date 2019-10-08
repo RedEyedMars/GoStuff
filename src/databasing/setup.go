@@ -52,17 +52,27 @@ type DBActionResponse struct {
 	Successful chan bool
 }
 
+func makeAdminFunc(argCount uint16, f func(...string)) func() {
+	switch argCount {
+	case 0:
+		return func() { f() }
+	case 1:
+		return func() {
+			if adminArgs != nil && len(adminArgs) > 0 {
+				f(adminArgs[0])
+			}
+		}
+	}
+	return func() {}
+}
 func SetupAdminCommands() {
 	if adminCommands == nil {
 		adminCommands = make(map[string]Events.Event)
 		//adminCommands["exit"] = &Events.Function{Name: "Admin!Exit", Function: func() { Shutdown <- true }}
-		adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember", Function: func() {
-			if adminArgs != nil {
-				memberIp := adminArgs[0]
-				RequestMemberAction("AddMember", NewMember(memberIp))
-			}
-		}}
-
+		adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember", Function: makeAdminFunc(1,
+			func(args ...string) { RequestMemberAction("Add", NewMember(args[0])) })}
+		adminCommands["removeMember"] = &Events.Function{Name: "Admin!AddMember", Function: makeAdminFunc(1,
+			func(args ...string) { RequestMemberAction("Remove", MembersByName[args[0]]) })}
 	}
 }
 func HandleAdminCommand(msg string) {
@@ -135,9 +145,12 @@ func StartDatabase(Shutdown chan bool) {
 		}
 
 		Events.FuncEvent("databasing.SetupResources", func() { SetupResources(db) })
-		Events.FuncEvent("databasing.SetupResources", func() { SetupChatMsgs(db) })
-		Events.FuncEvent("databasing.SetupResources", func() { SetupMembers(db) })
-		Events.FuncEvent("databasing.SetupResources", func() { SetupChannels(db) })
+		Events.FuncEvent("databasing.SetupChatMsgs", func() { SetupChatMsgs(db) })
+		Events.FuncEvent("databasing.SetupMembers", func() { SetupMembers(db) })
+		Events.FuncEvent("databasing.SetupChannels", func() { SetupChannels(db) })
+
+		Events.GoFuncEvent("databasing.LoadAllMembers", func() { LoadAllMembers() })
+
 		Events.FuncEvent("databasing.StartMessageListening", func() { StartMessageListening(db) })
 
 	}
