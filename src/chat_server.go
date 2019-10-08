@@ -24,9 +24,11 @@ func main() {
 			databasing.Run(Shutdown)
 			Run(Shutdown)
 		},
-			func(msg string) {
+			func(msg string) bool {
 				if !Networking.HandleAdminCommand(msg) {
-					databasing.HandleAdminCommand(msg)
+					return databasing.HandleAdminCommand(msg)
+				} else {
+					return true
 				}
 			}, func() {
 				databasing.End()
