@@ -5,28 +5,35 @@
 <title>Chat Example</title>
 <link rel="stylesheet" type="text/css" href="styles.css">
 <script type="text/javascript">
-window.onload = function () {
-var conn;
-var msg = document.getElementById("msg");
-var log = document.getElementById("log");
+function checkUsername_(username){
+  if(/^[a-z0-9_-]{3,32}$/igm.test(username)){
+    document.getElementById("username_status").src = "Success.jpg"
+    document.getElementById("username_status").alt = ""
+  } else {
+    if(username.lenth()<3){
+      document.getElementById("username_status").src = "Pending.jpg"
+      document.getElementById("username_status").alt = "Usernames must be greater than 3 characters long!"
+    } else if(username.lenth()>=32){
+      document.getElementById("username_status").src = "Fail.jpg"
+      document.getElementById("username_status").alt = "Usernames must be less than 33 characters long!"
+    } else if(/^.*\s.*$/igm.test(username)){
+      document.getElementById("username_status").src = "Fail.jpg"
+      document.getElementById("username_status").alt = "Usernames must have no spaces in them!"
+    } else if(/^.*[!@#$%^&*+=\(\)\[\]\{\}:;,\.\'\`~<>\/\\].*$/igm.test(username)){
+      document.getElementById("username_status").src = "Fail.jpg"
+      document.getElementById("username_status").alt = "Usernames must have no special characters in them!"
+    } else {
+      document.getElementById("username_status").src = "Fail.jpg"
+      document.getElementById("username_status").alt = "Your username is not valid!"
+    }
+  }
+};
 
 function createTextLinks_(text) {
-
   return (text || "")
-    .replace(
-      /\{([^\{\}]+)\}/ig,
-      function(match, curl){
-        return "<"+curl+">"
-      }
-    )
-    .replace(
-      /\{\{([^\}]+)\}\}/ig,
-      function(match, curl){
-        return "{"+curl+"}"
-      }
-    )
-    .replace(
-      /([^\S]|^)((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gi,
+    .replace(/\{([^\{\}]+)\}/ig,  function(match, curl){ return "<"+curl+">"})
+    .replace(/\{\{([^\}]+)\}\}/ig,function(match, curl){ return "{"+curl+"}"})
+    .replace(/([^\S]|^)((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gi,
     function(match, space, url){
       var hyperlink = url;
       if (!hyperlink.match('^https?:\/\/')) {
@@ -40,17 +47,21 @@ function createTextLinks_(text) {
         return space + '<a href="' + hyperlink + '" target="_blank">' + url + '</a>';
       }
     });
-
 };
 
-function appendLog(item) {
+window.onload = function () {
+  var conn;
+  var msg = document.getElementById("msg");
+  var log = document.getElementById("log");
+
+  function appendLog(item) {
     var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
     log.appendChild(item);
     if (doScroll) {
         log.scrollTop = log.scrollHeight - log.clientHeight;
     }
-}
-document.getElementById("chat").onsubmit = function () {
+  }
+  document.getElementById("chat").onsubmit = function () {
     if (!conn) {
         return false;
     }
@@ -112,14 +123,11 @@ if (window["WebSocket"]) {
         }
         }
     };
-} else {
+  } else {
     var item = document.createElement("div");
     item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
     appendLog(item);
-}
-
-    //document.getElementById("popup").style.display = "block";
-    //document.getElementById("chat").style.display = "none";
+  }
 };
 function pass_done() {
     document.getElementById("popup").style.display = "none";
@@ -133,7 +141,8 @@ function pass_done() {
 <body>
 <div id="popup">
     <div>Enter Username:</div>
-    <input id="username" type="text"/>
+    <input id="username" onchange="checkUsername_();" type="text"/>
+    <img id="username_status" src="Pending.jpg" alt="Please enter a username"></img>
     <div>Enter Password:</div>
     <input id="pass" type="password"/>
     <button onclick="pass_done()">Done</button>
