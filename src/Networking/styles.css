@@ -25,7 +25,7 @@ body {
 }
 .name_status_img {
   width: 2%;
-  height: 2%;
+  height: 20px;
 }
 #chat_div {
     display:none;
