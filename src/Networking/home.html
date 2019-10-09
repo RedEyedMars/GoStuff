@@ -9,23 +9,23 @@ function checkUsername_(){
   var username = document.getElementById("username").value ;
   if(/^[a-z0-9_-]{3,32}$/igm.test(username)){
     document.getElementById("username_status").src = "Success.jpg";
-    document.getElementById("username_status").alt = 'That username looks good!';
+    document.getElementById("username_status").title = 'That username looks good!';
   } else {
     if(username.length<3){
       document.getElementById("username_status").src = "Pending.jpg";
-      document.getElementById("username_status").alt = "Usernames must be greater than 3 characters long!";
+      document.getElementById("username_status").title = "Usernames must be greater than 3 characters long!";
     } else if(username.length>=32){
       document.getElementById("username_status").src = "Fail.jpg";
-      document.getElementById("username_status").alt = "Usernames must be less than 33 characters long!";
+      document.getElementById("username_status").title = "Usernames must be less than 33 characters long!";
     } else if(/^.*\s.*$/igm.test(username)){
       document.getElementById("username_status").src = "Fail.jpg";
-      document.getElementById("username_status").alt = "Usernames must have no spaces in them!";
+      document.getElementById("username_status").title = "Usernames must have no spaces in them!";
     } else if(/^.*[!@#$%^&*+=\(\)\[\]\{\}:;,\.\'\`~<>\/\\].*$/igm.test(username)){
       document.getElementById("username_status").src = "Fail.jpg";
-      document.getElementById("username_status").alt = "Usernames must have no special characters in them!";
+      document.getElementById("username_status").title = "Usernames must have no special characters in them!";
     } else {
       document.getElementById("username_status").src = "Fail.jpg";
-      document.getElementById("username_status").alt = "Your username is not valid!";
+      document.getElementById("username_status").title = "Your username is not valid!";
     }
   }
 };
@@ -143,7 +143,7 @@ function pass_done() {
 <div id="popup">
     <div>Enter Username:</div>
     <input id="username" onchange="checkUsername_();" type="text"/>
-    <img id="username_status" src="Pending.jpg" class="name_status_img" alt="Please enter a username"></img>
+    <img id="username_status" src="Pending.jpg" class="name_status_img" alt="This img is to display the status of the username" title="Please enter a username"></img>
     <div>Enter Password:</div>
     <input id="pass" type="password"/>
     <button onclick="pass_done()">Done</button>
