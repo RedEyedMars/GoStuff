@@ -10,6 +10,7 @@ function checkUsername_(username){
     document.getElementById("username_status").src = "Success.jpg";
     document.getElementById("username_status").alt = 'That username looks good!';
   } else {
+    console.log("regex failed!");
     if(username.length()<3){
       document.getElementById("username_status").src = "Pending.jpg";
       document.getElementById("username_status").alt = "Usernames must be greater than 3 characters long!";
