@@ -68,11 +68,22 @@ func End() {
 		Events.FuncEvent("Networking.End", onClose)
 	}
 }
+
 func StartWebClient(toClose chan bool) {
 	Shutdown = toClose
-
+	const GET = "GET"
 	SetupAdminCommands()
 	setupNetworkingRegex()
+	imgHandler := func(imgName string) {
+		http.HandleFunc(imgName, func(w http.ResponseWriter, r *http.Request) {
+			Logger.Verbose <- Logger.Msg{"Get image:" + r.URL.String()}
+			if r.Method != GET {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			http.ServeFile(w, r, "assets/imgs"+r.URL.String())
+		})
+	}
 
 	flag.Parse()
 	srv := &http.Server{Addr: ":8080"}
@@ -84,12 +95,15 @@ func StartWebClient(toClose chan bool) {
 	})
 	http.HandleFunc("/styles.css", func(w http.ResponseWriter, r *http.Request) {
 		Logger.Verbose <- Logger.Msg{"Get stylesheet:" + r.URL.String()}
-		if r.Method != "GET" {
+		if r.Method != GET {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 		http.ServeFile(w, r, "src/Networking"+r.URL.String())
 	})
+	imgHandler("/Pending.jpg")
+	imgHandler("/Fail.jpg")
+	imgHandler("/Success.jpg")
 	Events.GoFuncEvent("Networking.ListenAndServe", func() {
 		err := http.ListenAndServe(*addr, nil)
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "Networking.ListenAndServe"}
