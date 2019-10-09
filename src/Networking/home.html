@@ -7,24 +7,24 @@
 <script type="text/javascript">
 function checkUsername_(username){
   if(/^[a-z0-9_-]{3,32}$/igm.test(username)){
-    document.getElementById("username_status").src = "Success.jpg"
-    document.getElementById("username_status").alt = ""
+    document.getElementById("username_status").src = "Success.jpg";
+    document.getElementById("username_status").alt = "";
   } else {
     if(username.lenth()<3){
-      document.getElementById("username_status").src = "Pending.jpg"
-      document.getElementById("username_status").alt = "Usernames must be greater than 3 characters long!"
+      document.getElementById("username_status").src = "Pending.jpg";
+      document.getElementById("username_status").alt = "Usernames must be greater than 3 characters long!";
     } else if(username.lenth()>=32){
-      document.getElementById("username_status").src = "Fail.jpg"
-      document.getElementById("username_status").alt = "Usernames must be less than 33 characters long!"
+      document.getElementById("username_status").src = "Fail.jpg";
+      document.getElementById("username_status").alt = "Usernames must be less than 33 characters long!";
     } else if(/^.*\s.*$/igm.test(username)){
-      document.getElementById("username_status").src = "Fail.jpg"
-      document.getElementById("username_status").alt = "Usernames must have no spaces in them!"
+      document.getElementById("username_status").src = "Fail.jpg";
+      document.getElementById("username_status").alt = "Usernames must have no spaces in them!";
     } else if(/^.*[!@#$%^&*+=\(\)\[\]\{\}:;,\.\'\`~<>\/\\].*$/igm.test(username)){
-      document.getElementById("username_status").src = "Fail.jpg"
-      document.getElementById("username_status").alt = "Usernames must have no special characters in them!"
+      document.getElementById("username_status").src = "Fail.jpg";
+      document.getElementById("username_status").alt = "Usernames must have no special characters in them!";
     } else {
-      document.getElementById("username_status").src = "Fail.jpg"
-      document.getElementById("username_status").alt = "Your username is not valid!"
+      document.getElementById("username_status").src = "Fail.jpg";
+      document.getElementById("username_status").alt = "Your username is not valid!";
     }
   }
 };
