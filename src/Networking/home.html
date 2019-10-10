@@ -7,16 +7,17 @@
 <script type="text/javascript">
 function checkUsername_(){
   var username = document.getElementById("username").value ;
-  if(/^[a-z0-9_-]{3,32}$/igm.test(username)){
+  if(/^[a-z0-9_-]{3,16}$/igm.test(username)){
     document.getElementById("username_status").src = "Success.jpg";
     document.getElementById("username_status").title = 'That username looks good!';
+    return true;
   } else {
     if(username.length<3){
       document.getElementById("username_status").src = "Pending.jpg";
       document.getElementById("username_status").title = "Usernames must be greater than 3 characters long!";
-    } else if(username.length>=32){
+    } else if(username.length>=16){
       document.getElementById("username_status").src = "Fail.jpg";
-      document.getElementById("username_status").title = "Usernames must be less than 33 characters long!";
+      document.getElementById("username_status").title = "Usernames must be less than 16 characters long!";
     } else if(/^.*\s.*$/igm.test(username)){
       document.getElementById("username_status").src = "Fail.jpg";
       document.getElementById("username_status").title = "Usernames must have no spaces in them!";
@@ -27,9 +28,12 @@ function checkUsername_(){
       document.getElementById("username_status").src = "Fail.jpg";
       document.getElementById("username_status").title = "Your username is not valid!";
     }
+    return false;
   }
 };
-
+function checkPassword_(){
+  return true;
+}
 function createTextLinks_(text) {
   return (text || "")
     .replace(/\{([^\{\}]+)\}/ig,  function(match, curl){ return "<"+curl+">"})
@@ -50,8 +54,8 @@ function createTextLinks_(text) {
     });
 };
 
+var conn;
 window.onload = function () {
-  var conn;
   var msg = document.getElementById("msg");
   var log = document.getElementById("log");
 
@@ -117,9 +121,39 @@ if (window["WebSocket"]) {
           break;
         }
         case "new_connection": {
+          const username = document.getElementById("display_username");
+          while (username.firstChild) {
+            username.removeChild(username.firstChild);
+          }
           var item = document.createElement("div");
           item.innerHTML = createTextLinks_(result[2]);
-          appendLog(item);
+          username.appendChild(item);
+          break;
+        }
+        case "login_successful": {
+          const username = document.getElementById("display_username");
+          while (username.firstChild) {
+            username.removeChild(username.firstChild);
+          }
+          var item = document.createElement("div");
+          item.innerHTML = createTextLinks_(result[2]);
+          username.appendChild(item);
+          
+          login(result[2]);
+          break;
+        }
+        case "login_failed": {
+          const status = document.getElementById("account_signin_status");
+          while (status.firstChild) {
+            status.removeChild(status.firstChild);
+          }
+          var item = document.createElement("div");
+          item.innerHTML = createTextLinks_(result[2]);
+          status.appendChild(item);
+          break;
+        }
+        case "logout_successful": {
+          logout();
           break;
         }
         }
@@ -128,25 +162,53 @@ if (window["WebSocket"]) {
     var item = document.createElement("div");
     item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
     appendLog(item);
+    document.getElementById("account_signin_status").appendChild(item);
   }
 };
-function pass_done() {
-    document.getElementById("popup").style.display = "none";
-    document.getElementById("chat_div").style.display = "block";
-    var password = document.getElementById("pass").value;
+function login(username){
+  document.getElementById("popup").style.display = "none";
+  document.getElementById("chat_div").style.display = "block";
 
-    //DO STUFF WITH PASSWORD HERE
+  conn.send("{collect_channels}");
+  conn.send("{collect_friends}");
+  conn.send("{collect_resources}");
+}
+function logout(){
+  document.getElementById("popup").style.display = "block";
+  document.getElementById("chat_div").style.display = "none";
+}
+function signin() {
+    if (checkUsername_()&&checkPassword_()){
+      var password = document.getElementById("pass").value;
+      var username = document.getElementById("username").value;
+      conn.send("{attempt_login}"+encrypt_(password+username));
+    }
 };
+function signup() {
+    if (checkUsername_()&&checkPassword_()){
+      var password = document.getElementById("pass").value;
+      var username = document.getElementById("username").value;
+      conn.send("{attempt_signup}"+encrypt_(password+username));
+    }
+};
+function attempt_logout(){
+  conn.send("{attempt_logout}");
+}
 </script>
 </head>
 <body>
+<div id="display_username"></div>
 <div id="popup">
-    <div>Enter Username:</div>
-    <input id="username" onkeyup="checkUsername_();" type="text"/>
-    <img id="username_status" src="Pending.jpg" class="name_status_img" alt="This img is to display the status of the username" title="Please enter a username"></img>
-    <div>Enter Password:</div>
-    <input id="pass" type="password"/>
-    <button onclick="pass_done()">Done</button>
+  <div id="account_signin_status"></div>
+  <div>Enter Username:</div>
+  <input id="username" onkeyup="checkUsername_();" type="text"/>
+  <img id="username_status" src="Pending.jpg" class="name_status_img" alt="This img is to display the status of the username" title="Please enter a username"></img>
+  <div>Enter Password:</div>
+  <input id="pass" onkeyup="checkPassword_();" type="password"/>
+  <img id="password_status" src="Pending.jpg" class="name_status_img" alt="This img is to display the status of the password" title="Please enter a password"></img>
+  <br>
+  <button onclick="signin()">Sign in</button>
+  <button onclick="signup()">Sign up</button>
 </div>
 <div id="chat_div">
   <div id="log"></div>
