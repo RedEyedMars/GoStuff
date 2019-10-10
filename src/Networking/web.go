@@ -4,13 +4,14 @@ import (
 	"Events"
 	"Logger"
 	"context"
+	"crypto/tls"
 	"flag"
 	"net/http"
 	"strings"
 	"time"
 )
 
-var addr = flag.String("addr", ":8080", "http service address")
+var addr = flag.String("addr", ":443", "http service address")
 var Shutdown chan bool
 
 func SetupAdminCommands() {
@@ -74,8 +75,26 @@ func StartWebClient(toClose chan bool) {
 	const GET = "GET"
 	SetupAdminCommands()
 	setupNetworkingRegex()
+
+	flag.Parse()
+	registry := newRegistry()
+	go registry.run()
+
+	mux := http.NewServeMux()
+	cfg := &tls.Config{
+		MinVersion:               tls.VersionTLS12,
+		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+		PreferServerCipherSuites: true,
+		CipherSuites: []uint16{
+			tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+			tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
+			tls.TLS_RSA_WITH_AES_256_CBC_SHA,
+		},
+	}
+
 	imgHandler := func(imgName string) {
-		http.HandleFunc(imgName, func(w http.ResponseWriter, r *http.Request) {
+		mux.HandleFunc(imgName, func(w http.ResponseWriter, r *http.Request) {
 			Logger.Verbose <- Logger.Msg{"Get image:" + r.URL.String()}
 			if r.Method != GET {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -85,15 +104,11 @@ func StartWebClient(toClose chan bool) {
 		})
 	}
 
-	flag.Parse()
-	srv := &http.Server{Addr: ":8080"}
-	registry := newRegistry()
-	go registry.run()
-	http.HandleFunc("/", serveHome)
-	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/", serveHome)
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(registry, w, r)
 	})
-	http.HandleFunc("/styles.css", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/styles.css", func(w http.ResponseWriter, r *http.Request) {
 		Logger.Verbose <- Logger.Msg{"Get stylesheet:" + r.URL.String()}
 		if r.Method != GET {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -104,8 +119,14 @@ func StartWebClient(toClose chan bool) {
 	imgHandler("/Pending.jpg")
 	imgHandler("/Fail.jpg")
 	imgHandler("/Success.jpg")
+
+	srv := &http.Server{
+		Addr:         ":443",
+		Handler:      mux,
+		TLSConfig:    cfg,
+		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0)}
 	Events.GoFuncEvent("Networking.ListenAndServe", func() {
-		err := http.ListenAndServe(*addr, nil)
+		err := http.ListenAndServeTLS(":443", "server.crt", "server.key", nil)
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "Networking.ListenAndServe"}
 	})
 	onClose = func() {
