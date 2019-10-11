@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-var addr = flag.String("addr", ":8080", "http service address")
+var addr = flag.String("addr", ":443", "http service address")
 var Shutdown chan bool
 var homeHtml string
 
@@ -131,12 +131,12 @@ func StartWebClient(toClose chan bool) {
 	imgHandler("/Success.jpg")
 
 	srv := &http.Server{
-		Addr:         ":8080",
+		Addr:         ":443",
 		Handler:      mux,
 		TLSConfig:    cfg,
 		TLSNextProto: make(map[string]func(*http.Server, *tls.Conn, http.Handler), 0)}
 	Events.GoFuncEvent("Networking.ListenAndServe", func() {
-		err := http.ListenAndServeTLS(":8080", "https-server.crt", "https-server.key", nil)
+		err := http.ListenAndServeTLS(":443", "https-server.crt", "https-server.key", nil)
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "Networking.ListenAndServe"}
 	})
 	onClose = func() {
