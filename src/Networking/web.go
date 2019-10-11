@@ -6,6 +6,8 @@ import (
 	"context"
 	"crypto/tls"
 	"flag"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -13,6 +15,7 @@ import (
 
 var addr = flag.String("addr", ":8080", "http service address")
 var Shutdown chan bool
+var homeHtml string
 
 func SetupAdminCommands() {
 	if adminCommands == nil {
@@ -59,7 +62,9 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	http.ServeFile(w, r, "src/Networking/home.html")
+	w.Header().Set("Content-Type", "text/html")
+	fmt.Fprint(w, homeHtml)
+	//http.ServeFile(w, r, "src/Networking/home.html")
 }
 
 var onClose func()
@@ -75,6 +80,11 @@ func StartWebClient(toClose chan bool) {
 	const GET = "GET"
 	SetupAdminCommands()
 	setupNetworkingRegex()
+	homeRaw, err := ioutil.ReadFile("src/Networking/home.html")
+	if err != nil {
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartWebClient"}
+	}
+	homeHtml = string(homeRaw)
 
 	flag.Parse()
 	registry := newRegistry()
@@ -82,7 +92,7 @@ func StartWebClient(toClose chan bool) {
 
 	mux := http.NewServeMux()
 	cfg := &tls.Config{
-		MinVersion:               tls.VersionTLS11,
+		MinVersion:               tls.VersionTLS12,
 		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 		PreferServerCipherSuites: true,
 		CipherSuites: []uint16{
