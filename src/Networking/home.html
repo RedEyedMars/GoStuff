@@ -197,7 +197,6 @@ function attempt_logout(){
   conn.send("{attempt_logout}");
 };
 
-import sjcl from 'sjcl';
 function encrypt_(upwd){
   return forge_sha256(upwd);
 };
