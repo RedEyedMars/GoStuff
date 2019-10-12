@@ -4,6 +4,7 @@
 <head>
 <title>Chat Example</title>
 <link rel="stylesheet" type="text/css" href="styles.css">
+<script src='../../lib/forge_sha256/build/forge-sha256.min.js'></script>
 <script type="text/javascript">
 function checkUsername_(){
   var username = document.getElementById("username").value ;
@@ -138,7 +139,7 @@ if (window["WebSocket"]) {
           var item = document.createElement("div");
           item.innerHTML = createTextLinks_(result[2]);
           username.appendChild(item);
-          
+
           login(result[2]);
           break;
         }
@@ -193,7 +194,12 @@ function signup() {
 };
 function attempt_logout(){
   conn.send("{attempt_logout}");
-}
+};
+
+import sjcl from 'sjcl';
+function encrypt_(upwd){
+  return forge_sha256(upwd);
+};
 </script>
 </head>
 <body>
