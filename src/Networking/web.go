@@ -112,6 +112,14 @@ func StartWebClient(toClose chan bool) {
 		}
 		http.ServeFile(w, r, "src/Networking"+r.URL.String())
 	})
+	http.HandleFunc("/lib/forge_sha256/build/forge-sha256.min.js", func(w http.ResponseWriter, r *http.Request) {
+		Logger.Verbose <- Logger.Msg{"Get sha256:" + r.URL.String()}
+		if r.Method != GET {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		http.ServeFile(w, r, r.URL.String())
+	})
 	imgHandler("/Pending.jpg")
 	imgHandler("/Fail.jpg")
 	imgHandler("/Success.jpg")
