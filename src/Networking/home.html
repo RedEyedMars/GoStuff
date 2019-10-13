@@ -4,225 +4,41 @@
 <head>
 <title>Chat Example</title>
 <link rel="stylesheet" type="text/css" href="styles.css">
-<script src='/lib/forge-sha256-master/build/forge-sha256.min.js'></script>
 <script type="text/javascript">
-function checkUsername_(){
-  var username = document.getElementById("username").value ;
-  if(/^[a-z0-9_-]{3,16}$/igm.test(username)){
-    document.getElementById("username_status").src = "Success.jpg";
-    document.getElementById("username_status").title = 'That username looks good!';
-    return true;
-  } else {
-    if(username.length<3){
-      document.getElementById("username_status").src = "Pending.jpg";
-      document.getElementById("username_status").title = "Usernames must be greater than 3 characters long!";
-    } else if(username.length>=16){
-      document.getElementById("username_status").src = "Fail.jpg";
-      document.getElementById("username_status").title = "Usernames must be less than 16 characters long!";
-    } else if(/^.*\s.*$/igm.test(username)){
-      document.getElementById("username_status").src = "Fail.jpg";
-      document.getElementById("username_status").title = "Usernames must have no spaces in them!";
-    } else if(/^.*[!@#$%^&*+=\(\)\[\]\{\}:;,\.\'\`~<>\/\\].*$/igm.test(username)){
-      document.getElementById("username_status").src = "Fail.jpg";
-      document.getElementById("username_status").title = "Usernames must have no special characters in them!";
-    } else {
-      document.getElementById("username_status").src = "Fail.jpg";
-      document.getElementById("username_status").title = "Your username is not valid!";
-    }
-    return false;
-  }
-};
-function checkPassword_(){
-  return true;
-}
-function createTextLinks_(text) {
-  return (text || "")
-    .replace(/\{([^\{\}]+)\}/ig,  function(match, curl){ return "<"+curl+">"})
-    .replace(/\{\{([^\}]+)\}\}/ig,function(match, curl){ return "{"+curl+"}"})
-    .replace(/([^\S]|^)((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gi,
-    function(match, space, url){
-      var hyperlink = url;
-      if (!hyperlink.match('^https?:\/\/')) {
-        hyperlink = 'http://' + hyperlink;
-      }
-      if(hyperlink.match('https?:\/\/(www.)?youtu\.?be')){
-        var match = /https?:\/\/(www.)?youtu(\.be|be\.com)\/(watch\?v=|embed\/)?([^&]+)(&[^&]+)*/g.exec(hyperlink);
-        return space + '<iframe width="560" height="315" src="https://www.youtube.com/embed/'+match[4]+'" frameborder="0" allowfullscreen></iframe>';
-      }
-      else {
-        return space + '<a href="' + hyperlink + '" target="_blank">' + url + '</a>';
-      }
-    });
-};
-
 var conn;
-window.onload = function () {
-  var msg = document.getElementById("msg");
-  var log = document.getElementById("log");
-
-  function appendLog(item) {
-    var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
-    log.appendChild(item);
-    if (doScroll) {
-        log.scrollTop = log.scrollHeight - log.clientHeight;
-    }
+var commands = {};
+commands["new_connection"] = function(result) {
+  const username = document.getElementById("display_username");
+  while (username.firstChild) {
+    username.removeChild(username.firstChild);
   }
-  document.getElementById("chat").onsubmit = function () {
-    if (!conn) {
-        return false;
-    }
-    if (!msg.value) {
-        return false;
-    }
-    if (msg.value.charAt(0) == '/') {
-      var index = msg.value.indexOf(' ');
-      if (index != -1) {
-        conn.send("{"+msg.value.substring(0,index)+"}"+msg.value.substring(index+1));
-      }
-      else {
-        conn.send("{"+msg.value+"}");
-      }
-
-    }
-    else {
-      conn.send("{chat_msg}"+msg.value);
-    }
-    msg.value = "";
-    return false;
+  var item = document.createElement("div");
+  item.innerHTML = createTextLinks_(result);
+  username.appendChild(item);
 };
-if (window["WebSocket"]) {
+</script>
+<script src='/lib/forge-sha256-master/build/forge-sha256.min.js'></script>
+<script src='/lib/Networking/chat.js'></script>
+<script src='/lib/Networking/login.js'></script>
+<script type="text/javascript">
+
+window.onload = function () {
+  const msg = document.getElementById("msg");
+  const log = document.getElementById("log");
+
+  document.getElementById("chat").onsubmit = submit_chat;
+  if (window["WebSocket"]) {
     conn = new WebSocket("ws://" + document.location.host + "/ws");
-    conn.onopen = function (evt) {
-      conn.send("{new_connection}");
-    };
-    conn.onclose = function (evt) {
-        var item = document.createElement("div");
-        item.innerHTML = "<b>Connection closed.</b>";
-        appendLog(item);
-    };
+    conn.onopen = function (evt) { conn.send("{new_connection}"); };
+    conn.onclose = function (evt) { appendLog("<b>Connection closed.</b>"); };
     conn.onmessage = function (evt) {
         var result = /\{([^\{\}]+)\}(.*)/g.exec(evt.data);
-        switch (result[1]){
-          case "chat_msg":{
-          var messages = result[2].split('\n');
-          for (var i = 0; i < messages.length; i++) {
-            var item = document.createElement("div");
-            item.innerHTML = createTextLinks_(messages[i]);
-            appendLog(item);
-          }
-          break;
-        }
-        case "admin_msg":{
-          var messages = result[2].split('\n');
-          for (var i = 0; i < messages.length; i++) {
-            var item = document.createElement("div");
-            item.innerHTML = createTextLinks_(messages[i]);
-            appendLog(item);
-          }
-          break;
-        }
-        case "new_connection": {
-          const username = document.getElementById("display_username");
-          while (username.firstChild) {
-            username.removeChild(username.firstChild);
-          }
-          var item = document.createElement("div");
-          item.innerHTML = createTextLinks_(result[2]);
-          username.appendChild(item);
-          break;
-        }
-        case "login_successful": {
-          const username = document.getElementById("display_username");
-          while (username.firstChild) {
-            username.removeChild(username.firstChild);
-          }
-          var item = document.createElement("div");
-          item.innerHTML = createTextLinks_(result[2]);
-          username.appendChild(item);
-
-          login(result[2]);
-          break;
-        }
-        case "login_failed": {
-          const status = document.getElementById("account_signin_status");
-          while (status.firstChild) {
-            status.removeChild(status.firstChild);
-          }
-          var item = document.createElement("div");
-          item.innerHTML = createTextLinks_(result[2]);
-          status.appendChild(item);
-          break;
-        }
-        case "signup_successful": {
-          const username = document.getElementById("display_username");
-          while (username.firstChild) {
-            username.removeChild(username.firstChild);
-          }
-          var item = document.createElement("div");
-          item.innerHTML = createTextLinks_(result[2]);
-          username.appendChild(item);
-
-          login(result[2]);
-          break;
-        }
-        case "signup_failed": {
-          const status = document.getElementById("account_signin_status");
-          while (status.firstChild) {
-            status.removeChild(status.firstChild);
-          }
-          var item = document.createElement("div");
-          item.innerHTML = createTextLinks_(result[2]);
-          status.appendChild(item);
-          break;
-        }
-        case "logout_successful": {
-          logout();
-          break;
-        }
-        }
+        commands[result[1]](result[2]);
     };
   } else {
-    var item = document.createElement("div");
-    item.innerHTML = "<b>Your browser does not support WebSockets.</b>";
-    appendLog(item);
+    appendLog("<b>Your browser does not support WebSockets.</b>");
     document.getElementById("account_signin_status").appendChild(item);
   }
-};
-function login(username){
-  document.getElementById("popup").style.display = "none";
-  document.getElementById("chat_div").style.display = "block";
-
-  conn.send("{collect_channels}");
-  conn.send("{collect_friends}");
-  conn.send("{collect_resources}");
-
-
-}
-function logout(){
-  document.getElementById("popup").style.display = "block";
-  document.getElementById("chat_div").style.display = "none";
-}
-function signin_() {
-    if (checkUsername_()&&checkPassword_()){
-      var password = document.getElementById("pass").value;
-      var username = document.getElementById("username").value;
-      conn.send("{attempt_login}"+encrypt_(password+username));
-      console.log(encrypt_(password+username));
-    }
-};
-function signup_() {
-    if (checkUsername_()&&checkPassword_()){
-      var password = document.getElementById("pass").value;
-      var username = document.getElementById("username").value;
-      conn.send("{attempt_signup}"+username+","+encrypt_(password+username));
-    }
-};
-function attempt_logout(){
-  conn.send("{attempt_logout}");
-};
-
-function encrypt_(upwd){
-  return forge_sha256(upwd);
 };
 </script>
 </head>
@@ -246,8 +62,8 @@ function encrypt_(upwd){
   <form id="chat">
     <input type="submit" value="Send" />
     <input type="text" id="msg" size="64"/>
-    <button onclick="attempt_logout()">Logout</button>
   </form>
+  <button onclick="attempt_logout()">Logout</button>
 </div>
 </body>
 </html>
