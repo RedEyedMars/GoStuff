@@ -1,0 +1,69 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Chat Example</title>
+<link rel="stylesheet" type="text/css" href="styles.css">
+<script type="text/javascript">
+var conn;
+var commands = {};
+commands["new_connection"] = function(result) {
+  const username = document.getElementById("display_username");
+  while (username.firstChild) {
+    username.removeChild(username.firstChild);
+  }
+  var item = document.createElement("div");
+  item.innerHTML = createTextLinks_(result);
+  username.appendChild(item);
+};
+</script>
+<script src='/forge-sha256.min.js'></script>
+<script src='/chat.js'></script>
+<script src='/login.js'></script>
+<script type="text/javascript">
+
+window.onload = function () {
+  const msg = document.getElementById("msg");
+  const log = document.getElementById("log");
+
+  document.getElementById("chat").onsubmit = submit_chat;
+  if (window["WebSocket"]) {
+    conn = new WebSocket("ws://" + document.location.host + "/ws");
+    conn.onopen = function (evt) { conn.send("{new_connection}"); };
+    conn.onclose = function (evt) { appendLog("<b>Connection closed.</b>"); };
+    conn.onmessage = function (evt) {
+        var result = /\{([^\{\}]+)\}(.*)/g.exec(evt.data);
+        commands[result[1]](result[2]);
+    };
+  } else {
+    appendLog("<b>Your browser does not support WebSockets.</b>");
+    document.getElementById("account_signin_status").appendChild(item);
+  }
+};
+</script>
+</head>
+<body>
+
+<div id="popup">
+  <div id="account_signin_status"></div>
+  <div>Enter Username:</div>
+  <input id="username" onkeyup="checkUsername_();" type="text"/>
+  <img id="username_status" src="Pending.jpg" class="name_status_img" alt="This img is to display the status of the username" title="Please enter a username"></img>
+  <div>Enter Password:</div>
+  <input id="pass" onkeyup="checkPassword_();" type="password"/>
+  <img id="password_status" src="Pending.jpg" class="name_status_img" alt="This img is to display the status of the password" title="Please enter a password"></img>
+  <br>
+  <button onclick="signin_()">Sign in</button>
+  <button onclick="signup_()">Sign up</button>
+</div>
+<div id="chat_div">
+  <div id="display_username"></div>
+  <div id="log"></div>
+  <form id="chat">
+    <input type="submit" value="Send" />
+    <input type="text" id="msg" size="64"/>
+    <button onclick="attempt_logout()">Logout</button>
+  </form>
+</div>
+</body>
+</html>
