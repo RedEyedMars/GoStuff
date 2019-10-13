@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const GET = "GET"
+
 var addr = flag.String("addr", ":8080", "http service address")
 var Shutdown chan bool
 var homeHtml string
@@ -66,6 +68,27 @@ func serveHome(w http.ResponseWriter, r *http.Request) {
 	//http.ServeFile(w, r, "src/Networking/home.html")
 }
 
+func HandleImg(imgName string) {
+	http.HandleFunc(imgName, func(w http.ResponseWriter, r *http.Request) {
+		Logger.Verbose <- Logger.Msg{"Get image:" + r.URL.String()}
+		if r.Method != GET {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		http.ServeFile(w, r, "assets/imgs"+r.URL.String())
+	})
+}
+func HandleLib(libName string) {
+	http.HandleFunc(libName, func(w http.ResponseWriter, r *http.Request) {
+		Logger.Verbose <- Logger.Msg{"Get lib:" + r.URL.String()}
+		if r.Method != GET {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+		http.ServeFile(w, r, "lib/Networking"+r.URL.String())
+	})
+}
+
 var onClose func()
 
 func End() {
@@ -76,7 +99,6 @@ func End() {
 
 func StartWebClient(toClose chan bool) {
 	Shutdown = toClose
-	const GET = "GET"
 	SetupAdminCommands()
 	setupNetworkingRegex()
 	homeRaw, err := ioutil.ReadFile("src/Networking/home.html")
@@ -88,17 +110,6 @@ func StartWebClient(toClose chan bool) {
 	flag.Parse()
 	registry := newRegistry()
 	go registry.run()
-
-	imgHandler := func(imgName string) {
-		http.HandleFunc(imgName, func(w http.ResponseWriter, r *http.Request) {
-			Logger.Verbose <- Logger.Msg{"Get image:" + r.URL.String()}
-			if r.Method != GET {
-				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-				return
-			}
-			http.ServeFile(w, r, "assets/imgs"+r.URL.String())
-		})
-	}
 
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +123,7 @@ func StartWebClient(toClose chan bool) {
 		}
 		http.ServeFile(w, r, "src/Networking"+r.URL.String())
 	})
-	http.HandleFunc("/lib/forge-sha256-master/build/forge-sha256.min.js", func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/forge-sha256.min.js", func(w http.ResponseWriter, r *http.Request) {
 		Logger.Verbose <- Logger.Msg{"Get sha256:" + r.URL.String()}
 		if r.Method != GET {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -120,9 +131,11 @@ func StartWebClient(toClose chan bool) {
 		}
 		http.ServeFile(w, r, "lib/forge-sha256-master/build/forge-sha256.min.js")
 	})
-	imgHandler("/Pending.jpg")
-	imgHandler("/Fail.jpg")
-	imgHandler("/Success.jpg")
+	HandleLib("/chat.js")
+	HandleLib("/login.js")
+	HandleImg("/Pending.jpg")
+	HandleImg("/Fail.jpg")
+	HandleImg("/Success.jpg")
 
 	srv := &http.Server{Addr: ":8080"}
 	Events.GoFuncEvent("Networking.ListenAndServe", func() {
