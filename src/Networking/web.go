@@ -78,14 +78,14 @@ func HandleImg(imgName string) {
 		http.ServeFile(w, r, "assets/imgs"+r.URL.String())
 	})
 }
-func HandleLib(libName string) {
+func HandleJs(libName string) {
 	http.HandleFunc(libName, func(w http.ResponseWriter, r *http.Request) {
-		Logger.Verbose <- Logger.Msg{"Get lib:" + r.URL.String()}
+		Logger.Verbose <- Logger.Msg{"Get js:" + r.URL.String()}
 		if r.Method != GET {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		http.ServeFile(w, r, "lib/Networking"+r.URL.String())
+		http.ServeFile(w, r, "src/www/js"+r.URL.String())
 	})
 }
 
@@ -101,7 +101,7 @@ func StartWebClient(toClose chan bool) {
 	Shutdown = toClose
 	SetupAdminCommands()
 	setupNetworkingRegex()
-	homeRaw, err := ioutil.ReadFile("src/Networking/home.html")
+	homeRaw, err := ioutil.ReadFile("src/www/home.html")
 	if err != nil {
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartWebClient"}
 	}
@@ -131,8 +131,8 @@ func StartWebClient(toClose chan bool) {
 		}
 		http.ServeFile(w, r, "lib/forge-sha256-master/build/forge-sha256.min.js")
 	})
-	HandleLib("/chat.js")
-	HandleLib("/login.js")
+	HandleJs("/chat.js")
+	HandleJs("/login.js")
 	HandleImg("/Pending.jpg")
 	HandleImg("/Fail.jpg")
 	HandleImg("/Success.jpg")
