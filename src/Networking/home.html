@@ -212,7 +212,7 @@ function signup_() {
     if (checkUsername_()&&checkPassword_()){
       var password = document.getElementById("pass").value;
       var username = document.getElementById("username").value;
-      conn.send("{attempt_signup}"+encrypt_(password+username));
+      conn.send("{attempt_signup}"+username+","+encrypt_(password+username));
     }
 };
 function attempt_logout(){
