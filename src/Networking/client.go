@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"databasing"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -186,6 +187,7 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 					hash.Write([]byte(adminPassword))
 					hash.Write(msg)
 					if member := <-databasing.RequestMember("ByPwd", string(hash.Sum(nil))); member != nil {
+						databasing.AddMemberToMaps(member)
 						c.name = member.Name
 						c.send <- []byte("{login_successful}" + member.Name)
 					} else {
@@ -203,7 +205,7 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 						hash := sha256.New()
 						hash.Write([]byte(adminPassword))
 						hash.Write([]byte(pwd))
-						pwdAsString := string(hash.Sum(nil))
+						pwdAsString := fmt.Sprintf("%x", hash.Sum(nil)[:])
 						if member := <-databasing.RequestMember("ByPwd", pwdAsString); member == nil {
 							member := databasing.NewMemberFull(username)
 							Events.GoFuncEvent("client.Signup.AddMember", func() {
