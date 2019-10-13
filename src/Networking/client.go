@@ -187,6 +187,7 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 					hash.Write([]byte(adminPassword))
 					hash.Write(msg)
 					pwdAsString := fmt.Sprintf("%x", hash.Sum(nil)[:])
+					Logger.Verbose <- Logger.Msg{"password is pwdAsString"}
 					if member := <-databasing.RequestMember("ByPwd", pwdAsString); member != nil {
 						databasing.AddMemberToMaps(member)
 						c.name = member.Name
