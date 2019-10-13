@@ -199,6 +199,7 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 					if member := <-databasing.RequestMember("ByName", username); member != nil {
 						c.send <- []byte("{signup_failed}Username taken!")
 					} else {
+						Logger.Verbose <- Logger.Msg{"No member found; good!"}
 						hash := sha256.New()
 						hash.Write([]byte(adminPassword))
 						hash.Write([]byte(pwd))
