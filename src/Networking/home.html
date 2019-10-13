@@ -191,7 +191,6 @@ if (window["WebSocket"]) {
 function login(username){
   document.getElementById("popup").style.display = "none";
   document.getElementById("chat_div").style.display = "block";
-  document.getElementById("display_username").style.display = "block";
 
   conn.send("{collect_channels}");
   conn.send("{collect_friends}");
@@ -202,7 +201,6 @@ function login(username){
 function logout(){
   document.getElementById("popup").style.display = "block";
   document.getElementById("chat_div").style.display = "none";
-  document.getElementById("display_username").style.display = "none";
 }
 function signin_() {
     if (checkUsername_()&&checkPassword_()){
@@ -229,7 +227,7 @@ function encrypt_(upwd){
 </script>
 </head>
 <body>
-<div id="display_username"><button onclick="attempt_logout()">Logout</button></div>
+
 <div id="popup">
   <div id="account_signin_status"></div>
   <div>Enter Username:</div>
@@ -243,10 +241,12 @@ function encrypt_(upwd){
   <button onclick="signup_()">Sign up</button>
 </div>
 <div id="chat_div">
+  <div id="display_username"></div>
   <div id="log"></div>
   <form id="chat">
     <input type="submit" value="Send" />
     <input type="text" id="msg" size="64"/>
+    <button onclick="attempt_logout()">Logout</button>
   </form>
 </div>
 </body>
