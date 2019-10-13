@@ -207,7 +207,6 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 						if member := <-databasing.RequestMember("ByPwd", pwdAsString); member == nil {
 							member := databasing.NewMemberFull(username)
 							Events.GoFuncEvent("client.Signup.AddMember", func() {
-								databasing.AddMemberToMaps(member)
 								databasing.RequestMemberAction("Add", member, pwdAsString)
 							})
 							c.name = member.Name
@@ -217,6 +216,9 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 						}
 					}
 				})
+			case "attempt_logout":
+				c.send <- []byte("{logout_successful}")
+				c.name = "_none_"
 			case "/mode":
 				switch string(msg) {
 				case "admin":
