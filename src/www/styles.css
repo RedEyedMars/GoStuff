@@ -51,14 +51,13 @@ body {
   overflow: hidden;
 }
 #display_username {
-  padding: 0 0.5em 0 0.5em;
   background: white;
-  font-size: 16px;
   margin: 0;
+  padding: 0.5em 0.5em 0.5em 0.5em;
   position: absolute;
-  top: 2.5em;
+  top: 1em;
   left: 0.5em;
   right: 0.5em;
-  bottom: 3em;
+  bottom: 1em;
   overflow: auto;
 }
