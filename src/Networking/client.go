@@ -4,7 +4,10 @@ import (
 	"Events"
 	"Logger"
 	"bytes"
+	"crypto/sha256"
+	"databasing"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -177,6 +180,42 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 			case "new_connection":
 				//registry.broadcast <- []byte("{new_connection}" + c.conn.LocalAddr().String() + "::" + c.conn.RemoteAddr().String())
 				//registry.broadcast <- message
+			case "attempt_login":
+				Events.GoFuncEvent("client.AttemptLogin", func() {
+					hash := sha256.New()
+					hash.Write([]byte(adminPassword))
+					hash.Write(msg)
+					if member := <-databasing.RequestMember("ByPwd", string(hash.Sum(nil))); member != nil {
+						c.name = member.Name
+						c.send <- []byte("{login_successful}" + member.Name)
+					} else {
+						c.send <- []byte("{login_failed}Credentials not accepted, either check your password or your username!")
+					}
+				})
+			case "attempt_signup":
+				Events.GoFuncEvent("client.AttemptSignup", func() {
+					split := strings.Split(string(msg), ",")
+					username, pwd := split[0], split[1]
+					if member := <-databasing.RequestMember("ByName", username); member != nil {
+						c.send <- []byte("{signup_failed}Username taken!")
+					} else {
+						hash := sha256.New()
+						hash.Write([]byte(adminPassword))
+						hash.Write([]byte(pwd))
+						pwdAsString := string(hash.Sum(nil))
+						if member := <-databasing.RequestMember("ByPwd", pwdAsString); member == nil {
+							member := databasing.NewMemberFull(username)
+							Events.GoFuncEvent("client.Signup.AddMember", func() {
+								databasing.AddMemberToMaps(member)
+								databasing.RequestMemberAction("Add", member, pwdAsString)
+							})
+							c.name = member.Name
+							c.send <- []byte("{signup_successful}" + member.Name)
+						} else {
+							c.send <- []byte("{login_failed}Credentials not accepted, try a different password and username!")
+						}
+					}
+				})
 			case "/mode":
 				switch string(msg) {
 				case "admin":

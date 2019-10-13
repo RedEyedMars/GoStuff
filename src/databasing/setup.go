@@ -39,7 +39,6 @@ var LoadedResources map[string]*Resource
 var Channels map[string]*Channel
 
 var MembersByName map[string]*Member
-var MembersByIp map[string]*Member
 
 var reSanatizeDatabase *regexp.Regexp
 var reIsName *regexp.Regexp
@@ -76,13 +75,11 @@ func SetupAdminCommands() {
 		adminCommands = make(map[string]Events.Event)
 		//adminCommands["exit"] = &Events.Function{Name: "Admin!Exit", Function: func() { Shutdown <- true }}
 		adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember", Function: makeAdminFunc(1,
-			func(args ...string) { RequestMemberAction("Add", NewMember(args[0])) })}
+			func(args ...string) { RequestMemberAction("Add", NewMember(), args[0]) })}
 		adminCommands["addMemberFull"] = &Events.Function{Name: "Admin!AddMember_Full", Function: makeAdminFunc(2,
-			func(args ...string) { RequestMemberAction("Add", NewMemberFull(args[0], args[1])) })}
+			func(args ...string) { RequestMemberAction("Add", NewMemberFull(args[0]), args[1]) })}
 		adminCommands["removeMember"] = &Events.Function{Name: "Admin!RemoveMember", Function: makeAdminFunc(1,
 			func(args ...string) { RequestMemberAction("Remove", MembersByName[args[0]]) })}
-		adminCommands["removeMemberByIp"] = &Events.Function{Name: "Admin!RemoveMember_IP", Function: makeAdminFunc(1,
-			func(args ...string) { RequestMemberAction("Remove", MembersByIp[args[0]]) })}
 	}
 }
 func HandleAdminCommand(msg string) bool {
@@ -121,7 +118,6 @@ func Setup() {
 	LoadedResources = make(map[string]*Resource)
 	Channels = make(map[string]*Channel)
 	MembersByName = make(map[string]*Member)
-	MembersByIp = make(map[string]*Member)
 
 	reSanatizeDatabase = regexp.MustCompile(`(\n, \r, \, ', ")`)
 	reIsName = regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9_-]*`)
@@ -277,18 +273,6 @@ func SetupServer() {
 	//LoadAllMembers()
 	RequestChannel("AllNames")
 
-}
-
-func SetupMember(ip string) *Member {
-	member, present := MembersByIp[ip]
-	if !present {
-		member, present = <-RequestMember("ByIp", ip)
-		member = NewMember(ip)
-	}
-	for channel := range RequestChannelsByName("Members", member.Name) {
-		channel.Members[member.Name] = member
-	}
-	return member
 }
 
 func Close() {

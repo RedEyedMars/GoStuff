@@ -153,6 +153,28 @@ if (window["WebSocket"]) {
           status.appendChild(item);
           break;
         }
+        case "signup_successful": {
+          const username = document.getElementById("display_username");
+          while (username.firstChild) {
+            username.removeChild(username.firstChild);
+          }
+          var item = document.createElement("div");
+          item.innerHTML = createTextLinks_(result[2]);
+          username.appendChild(item);
+
+          login(result[2]);
+          break;
+        }
+        case "signup_failed": {
+          const status = document.getElementById("account_signin_status");
+          while (status.firstChild) {
+            status.removeChild(status.firstChild);
+          }
+          var item = document.createElement("div");
+          item.innerHTML = createTextLinks_(result[2]);
+          status.appendChild(item);
+          break;
+        }
         case "logout_successful": {
           logout();
           break;
@@ -178,7 +200,7 @@ function logout(){
   document.getElementById("popup").style.display = "block";
   document.getElementById("chat_div").style.display = "none";
 }
-function signin() {
+function signin_() {
     if (checkUsername_()&&checkPassword_()){
       var password = document.getElementById("pass").value;
       var username = document.getElementById("username").value;
@@ -186,7 +208,7 @@ function signin() {
       console.log(encrypt_(password+username));
     }
 };
-function signup() {
+function signup_() {
     if (checkUsername_()&&checkPassword_()){
       var password = document.getElementById("pass").value;
       var username = document.getElementById("username").value;
@@ -213,8 +235,8 @@ function encrypt_(upwd){
   <input id="pass" onkeyup="checkPassword_();" type="password"/>
   <img id="password_status" src="Pending.jpg" class="name_status_img" alt="This img is to display the status of the password" title="Please enter a password"></img>
   <br>
-  <button onclick="signin()">Sign in</button>
-  <button onclick="signup()">Sign up</button>
+  <button onclick="signin_()">Sign in</button>
+  <button onclick="signup_()">Sign up</button>
 </div>
 <div id="chat_div">
   <div id="log"></div>

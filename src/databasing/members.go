@@ -14,7 +14,7 @@ client_names
 | Field | Type         | Null | Key | Default | Extra |
 +-------+--------------+------+-----+---------+-------+
 | name  | varchar(255) | NO   | PRI | NULL    |       |
-| ip    | varchar(15)  | NO   | PRI | NULL    |       |
+| pwd   | varchar(255) | NO   | PRI | NULL    |       |
 +-------+--------------+------+-----+---------+-------+
 
 channels_names
@@ -37,7 +37,6 @@ func LoadAllMembers() {
 
 type Member struct {
 	Name string
-	IP   string
 }
 
 type DBMemberResponse struct {
@@ -45,26 +44,23 @@ type DBMemberResponse struct {
 	Members chan *Member
 }
 
-func NewMember(ip string) *Member {
+func NewMember() *Member {
 	member := &Member{
 		Name: fmt.Sprintf("%s%s%s", Adverbs[rand.Intn(len(Adverbs))],
 			Adjectives[rand.Intn(len(Adjectives))],
-			Nouns[rand.Intn(len(Nouns))]),
-		IP: ip}
+			Nouns[rand.Intn(len(Nouns))])}
 	Events.FuncEvent("databasing.members.AddMemberToMap", func() { AddMemberToMaps(member) })
 	return member
 }
-func NewMemberFull(name string, ip string) *Member {
+func NewMemberFull(name string) *Member {
 	member := &Member{
-		Name: name,
-		IP:   ip}
+		Name: name}
 	Events.FuncEvent("databasing.members.AddMemberToMap", func() { AddMemberToMaps(member) })
 	return member
 }
 func AddMemberToMaps(member *Member) {
-	Logger.Verbose <- Logger.Msg{"Add Member: " + member.Name + "; " + member.IP}
+	Logger.Verbose <- Logger.Msg{"Add Member: " + member.Name}
 	MembersByName[member.Name] = member
-	MembersByIp[member.IP] = member
 }
 
 func NewMemberResponse(name string, arg ...interface{}) *DBMemberResponse {
@@ -82,13 +78,13 @@ func NewMemberActionArr(name string, args []interface{}) *DBActionResponse {
 }
 
 func SetupMembers(db *sql.DB) {
-	defineQuery(db, "Members_All", `SELECT name,ip FROM client_names ;`)
+	defineQuery(db, "Members_All", `SELECT name FROM client_names ;`)
 
-	defineQuery(db, "Members_ByName", `SELECT name,ip FROM client_names WHERE name=? ;`)
-	defineQuery(db, "Members_ByIp", `SELECT name,ip FROM client_names WHERE ip=? ;`)
+	defineQuery(db, "Members_ByName", `SELECT name FROM client_names WHERE name=? ;`)
+	defineQuery(db, "Members_ByPwd", `SELECT name FROM client_names WHERE pwd=? ;`)
 
 	defineQuery(db, "Members_Add", `INSERT INTO client_names VALUES (?,?);`)
-	defineQuery(db, "Members_Remove", `DELETE FROM client_names WHERE name = ? and ip = ?;`)
+	defineQuery(db, "Members_Remove", `DELETE FROM client_names WHERE pwd = ?;`)
 }
 
 func RequestMember(name string, args ...interface{}) <-chan *Member {
@@ -101,32 +97,34 @@ func RequestMembersByName(name string, args ...interface{}) <-chan *Member {
 	MemberNamesRequests <- request
 	return request.Members
 }
-func RequestMemberAction(name string, member *Member) <-chan bool {
-	request := NewMemberActionArr(name, []interface{}{member.Name, member.IP})
+func RequestMemberAction(name string, member *Member, args ...interface{}) <-chan bool {
+	var request *DBActionResponse
+	switch len(args) {
+	case 0:
+		request = NewMemberActionArr(name, []interface{}{member.Name})
+	case 1:
+		request = NewMemberActionArr(name, []interface{}{member.Name, args[0]})
+	case 2:
+		request = NewMemberActionArr(name, []interface{}{member.Name, args[0], args[1]})
+	}
 	ActionRequests <- request
 	return request.Successful
 }
 func (ms *DBMemberResponse) Parse(rows *sql.Rows) {
 	for rows.Next() {
-		var (
-			name string
-			ip   string
-		)
-		if err := rows.Scan(&name, &ip); err != nil {
+		var name string
+		if err := rows.Scan(&name); err != nil {
 			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.members.Parse"}
 		}
 
-		ms.Members <- &Member{name, ip}
+		ms.Members <- &Member{Name: name}
 	}
 	close(ms.Members)
 }
 func (ms *DBMemberResponse) ParseNames(rows *sql.Rows) {
 	for rows.Next() {
-		var (
-			name string
-			ip   string
-		)
-		if err := rows.Scan(&name, &ip); err != nil {
+		var name string
+		if err := rows.Scan(&name); err != nil {
 			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.members.ParseNames"}
 		}
 
