@@ -223,8 +223,10 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 			case "collect_channels":
 				var channels []string
 				for channel := range databasing.RequestChannelsByName("ByMember", c.name) {
-					channels = append(channels, channel.Name)
-					channel.NewClient <- c.send
+					if channel != nil {
+						channels = append(channels, channel.Name)
+						channel.NewClient <- c.send
+					}
 				}
 				c.send <- []byte("{channel_names}" + strings.Join(channels, ";;"))
 			case "attempt_logout":
