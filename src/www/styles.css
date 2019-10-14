@@ -16,8 +16,8 @@ body {
   margin: 0;
   padding: 0.5em 0.5em 0.5em 0.5em;
   position: absolute;
-  top: 30%;
-  left: 30%;
+  top: 40%;
+  left: 40%;
   width: 17%;
   overflow: auto;
   display: block;
@@ -29,6 +29,7 @@ body {
   position: absolute;
   top: 0.5em;
   left: 7.5em;
+  width: 75%;
   overflow: auto;
   display:block;
 }
@@ -55,7 +56,7 @@ body {
   position: absolute;
   top: 1.5em;
   left: 0.5em;
-  width: 5em;
+  width: 15%;
   overflow: auto;
   font-size: 16px;
 }
