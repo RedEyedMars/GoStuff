@@ -10,7 +10,6 @@ var username;
 var commands = {};
 commands["new_connection"] = function(result) {
   username = document.getElementById("displayusername");
-  console.log(">"+username);
   while (username.firstChild) {
     username.removeChild(username.firstChild);
   }
@@ -27,6 +26,7 @@ commands["new_connection"] = function(result) {
 window.onload = function () {
   const msg = document.getElementById("msg");
   const log = document.getElementById("log");
+  username = document.getElementById("displayusername");
 
   document.getElementById("chat").onsubmit = submit_chat;
   if (window["WebSocket"]) {
