@@ -83,7 +83,7 @@ func SetupChannels(db *sql.DB) {
 	defineQuery(db, "Channels_ByMember", `SELECT channel_name FROM channels_names WHERE member_name=? ;`)
 	defineQuery(db, "Channels_Channels", `SELECT channel_name FROM channels_names;`)
 
-	defineQuery(db, "Channels_AddMember", `INSERT INTO channels_names VALUES (?,?);`)
+	defineQuery(db, "Channels_AddMember", `INSERT INTO channels_names VALUES (?,?,NULL);`)
 }
 func RequestChannel(name string, args ...string) <-chan *Channel {
 	request := NewChannelResponseArr(name, args)
