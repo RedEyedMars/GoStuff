@@ -53,7 +53,7 @@ function signup_() {
     if (checkUsername_()&&checkPassword_()){
       var password = document.getElementById("pass").value;
       var user_val = document.getElementById("username").value;
-      conn.send("{attempt_signup}"+username+","+encrypt_(password+user_val));
+      conn.send("{attempt_signup}"+user_val+","+encrypt_(password+user_val));
     }
 };
 function attempt_logout(){
@@ -66,7 +66,7 @@ function encrypt_(upwd){
 
 commands["login_successful"] = function(result) {
   while (username.firstChild) {
-    username.removeChild(username_elem.firstChild);
+    username.removeChild(username.firstChild);
   }
   var item = document.createElement("div");
   item.innerHTML = createTextLinks_(result);
