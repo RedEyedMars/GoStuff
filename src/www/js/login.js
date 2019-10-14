@@ -67,12 +67,7 @@ function encrypt_(upwd){
 };
 
 commands["login_successful"] = function(result) {
-  while (username.firstChild) {
-    username.removeChild(username.firstChild);
-  }
-  var item = document.createElement("div");
-  item.innerHTML = createTextLinks_(result);
-  username.appendChild(item);
+  username.value = result;
 
   login(result);
 };
@@ -86,12 +81,7 @@ commands["login_failed"] = function(result){
   status.appendChild(item);
 };
 commands["signup_successful"] = function(result){
-  while (username.firstChild) {
-    username.removeChild(username.firstChild);
-  }
-  var item = document.createElement("div");
-  item.innerHTML = createTextLinks_(result);
-  username.appendChild(item);
+  username.value = result;
 
   login(result);
 };

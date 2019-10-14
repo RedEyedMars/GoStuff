@@ -10,12 +10,7 @@ var username;
 var commands = {};
 commands["new_connection"] = function(result) {
   username = document.getElementById("displayusername");
-  while (username.firstChild) {
-    username.removeChild(username.firstChild);
-  }
-  var item = document.createElement("div");
-  item.innerHTML = createTextLinks_(result);
-  username.appendChild(item);
+  username.value = result;
 };
 </script>
 <script src='/forge-sha256.min.js'></script>
