@@ -63,3 +63,10 @@ body {
   width: 100%;
   overflow: hidden;
 }
+
+.other_persons_chat {
+  text-align: right;
+  padding-left: 50%;
+  outline: 3px solid green;
+  width: 50%;
+}

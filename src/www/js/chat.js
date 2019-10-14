@@ -20,7 +20,17 @@ function createTextLinks_(text) {
 
 function appendLog(inner) {
   var item = document.createElement("div");
-  item.innerHTML = inner;
+  var indexOfColon = inner.indexOf('::');
+  if(indexOfColon>0){
+    var chat_user = inner.substring(0,indexOfColon);
+    if(chat_user==username){
+      item.className = "other_persons_chat";
+    }
+    item.innerHTML = inner.substring(indexOfColon+2,inner.length());
+    item.title = char_user;
+  } else {
+    item.innerHTML = inner;
+  }
   var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
 
   log.appendChild(item);
@@ -47,7 +57,7 @@ function submit_chat() {
 
   }
   else {
-    conn.send("{chat_msg}"+msg.value);
+    conn.send("{chat_msg}"+username+"::"+msg.value);
   }
   msg.value = "";
   return false;

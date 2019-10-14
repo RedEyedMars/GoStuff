@@ -43,9 +43,10 @@ func (h *ClientRegistry) run() {
 			})
 		case message := <-h.broadcast:
 			Events.FuncEvent("ClientRegistry.Broadcast", func() {
+				msg := SanatizeMessage(message)
 				for client := range h.clients {
 					select {
-					case client.send <- SanatizeMessage(message):
+					case client.send <- msg:
 					default:
 						close(client.send)
 						delete(h.clients, client)
