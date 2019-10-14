@@ -30,8 +30,9 @@ function appendLog(inner) {
     }
     item.innerHTML = inner.substring(indexOfColon+2,inner.length);
     item.title = chat_user;
+    console.log(log.lastChild&&log.lastChild.title&&log.lastChild.title!=""&&log.lastChild==chat_user);
     while(log.lastChild&&log.lastChild.title&&log.lastChild.title!=""&&log.lastChild==chat_user){
-      item.innerHTML = log.lastChild + "</br>" + item.innerHTML;
+      item.innerHTML = log.lastChild.innerHTML + "</br>" + item.innerHTML;
       log.removeChild(log.lastChild);
     }
     log.appendChild(item);
