@@ -27,11 +27,11 @@ body {
   width: 20px;
   height: 20px;
 }
-#chat-div {
+#chat_div {
     display:none;
 }
 
-#display-username {
+#displayusername {
   background: white;
   margin: 0;
   padding: 0.5em 0.5em 0.5em 0.5em;

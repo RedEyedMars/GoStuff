@@ -30,7 +30,7 @@ function checkPassword_(){
 
 function login(username){
   document.getElementById("popup").style.display = "none";
-  document.getElementById("chat-div").style.display = "block";
+  document.getElementById("chat_div").style.display = "block";
 
   conn.send("{collect_channels}");
   conn.send("{collect_friends}");
@@ -40,7 +40,7 @@ function login(username){
 }
 function logout(){
   document.getElementById("popup").style.display = "block";
-  document.getElementById("chat-div").style.display = "none";
+  document.getElementById("chat_div").style.display = "none";
 }
 function signin_() {
     if (checkUsername_()&&checkPassword_()){
@@ -65,7 +65,7 @@ function encrypt_(upwd){
 };
 
 commands["login_successful"] = function(result) {
-  const username = document.getElementById("display-username");
+  const username = document.getElementById("displayusername");
   /*while (username.firstChild) {
     username.removeChild(username.firstChild);
   }*/
@@ -85,7 +85,7 @@ commands["login_failed"] = function(result){
   status.appendChild(item);
 };
 commands["signup_successful"] = function(result){
-  const username = document.getElementById("display-username");
+  const username = document.getElementById("displayusername");
   while (username.firstChild) {
     username.removeChild(username.firstChild);
   }
