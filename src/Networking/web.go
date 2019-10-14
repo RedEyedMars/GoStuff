@@ -121,7 +121,7 @@ func StartWebClient(toClose chan bool) {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		http.ServeFile(w, r, "src/Networking"+r.URL.String())
+		http.ServeFile(w, r, "src/www"+r.URL.String())
 	})
 	http.HandleFunc("/forge-sha256.min.js", func(w http.ResponseWriter, r *http.Request) {
 		Logger.Verbose <- Logger.Msg{"Get sha256:" + r.URL.String()}
