@@ -33,14 +33,6 @@ body {
 
 #displayusername {
   background: white;
-  margin: 0;
-  padding: 0.5em 0.5em 0.5em 0.5em;
-  position: absolute;
-  top: 1em;
-  left: 0.5em;
-  right: 0.5em;
-  bottom: 1em;
-  overflow: auto;
 }
 
 #log {
