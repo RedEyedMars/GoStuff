@@ -133,6 +133,7 @@ func StartWebClient(toClose chan bool) {
 	})
 	HandleJs("/chat.js")
 	HandleJs("/login.js")
+	HandleJs("/channels.js")
 	HandleImg("/Pending.jpg")
 	HandleImg("/Fail.jpg")
 	HandleImg("/Success.jpg")
