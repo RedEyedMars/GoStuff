@@ -1,5 +1,5 @@
 function checkUsername_(){
-  var username_val = username.firstChild.value ;
+  var username_val = document.getElementById("username").value;
   if(/^[a-z0-9_-]{3,16}$/igm.test(username_val)){
     document.getElementById("username_status").src = "Success.jpg";
     document.getElementById("username_status").title = 'That username looks good!';
