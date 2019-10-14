@@ -21,9 +21,7 @@ func newRegistry() *ClientRegistry {
 }
 
 func (h *ClientRegistry) run() {
-	Events.GoFuncEvent("ClientRegistry.RunRegistry", func() {
-
-	})
+	Events.GoFuncEvent("ClientRegistry.RunRegistry", h.run_registry)
 }
 func (h *ClientRegistry) run_registry() {
 	for {
