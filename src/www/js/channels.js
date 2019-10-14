@@ -2,8 +2,7 @@
 
 function appendChannel(channel_name){
   var item = document.createElement("div");
-  item.innerHTML = inner.substring(indexOfColon+2,inner.length);
-  item.title = chat_user;
+  item.innerHTML = channel_name;
   item.className = "channel";
   channels.appendChild(item);
 };

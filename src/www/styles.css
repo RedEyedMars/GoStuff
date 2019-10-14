@@ -20,7 +20,7 @@ body {
   left: 30%;
   width: 5em;
   overflow: auto;
-  display:block;
+  display: block;
 }
 #channels {
   background: gray;
