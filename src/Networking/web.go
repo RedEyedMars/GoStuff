@@ -129,7 +129,7 @@ func StartWebClient(toClose chan bool) {
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-		http.ServeFile(w, r, "lib/forge-sha256-master/build/forge-sha256.min.js")
+		http.ServeFile(w, r, "www/lib/forge-sha256-master/build/forge-sha256.min.js")
 	})
 	HandleJs("/chat.js")
 	HandleJs("/login.js")
