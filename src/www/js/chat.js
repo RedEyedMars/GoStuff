@@ -19,21 +19,28 @@ function createTextLinks_(text) {
 };
 
 function appendLog(inner) {
+  var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
+
   var item = document.createElement("div");
   var indexOfColon = inner.indexOf('::');
   if(indexOfColon>0){
     var chat_user = inner.substring(0,indexOfColon);
+    var log = document.getElementById("log");
     if(chat_user!=username.innerHTML){
       item.className = "other_persons_chat";
     }
     item.innerHTML = inner.substring(indexOfColon+2,inner.length);
     item.title = chat_user;
+    while(log.lastChild&&log.lastChild.title&&log.lastChild.title!=""&&log.lastChild==chat_user){
+      item.innerHTML = log.lastChild + "</br>" + item.innerHTML;
+      log.removeChild(log.lastChild);
+    }
+    log.appendChild(item);
   } else {
     item.innerHTML = inner;
+    log.appendChild(item);
   }
-  var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
 
-  log.appendChild(item);
   if (doScroll) {
       log.scrollTop = log.scrollHeight - log.clientHeight;
   }
