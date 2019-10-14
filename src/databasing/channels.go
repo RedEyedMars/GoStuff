@@ -116,11 +116,8 @@ func (chs *DBChannelResponse) ParseNew(rows *sql.Rows) {
 }
 func (chs *DBChannelResponse) ParseNames(rows *sql.Rows) {
 	for rows.Next() {
-		var (
-			name string
-			id   int
-		)
-		if err := rows.Scan(&name, &id); err != nil {
+		var name string
+		if err := rows.Scan(&name); err != nil {
 			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.channels.Parse"}
 		}
 
