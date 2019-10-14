@@ -23,7 +23,7 @@ function appendLog(inner) {
   var indexOfColon = inner.indexOf('::');
   if(indexOfColon>0){
     var chat_user = inner.substring(0,indexOfColon);
-    if(chat_user==username){
+    if(chat_user==username.firstChild.value){
       item.className = "other_persons_chat";
     }
     item.innerHTML = inner.substring(indexOfColon+2,inner.length());
@@ -57,7 +57,7 @@ function submit_chat() {
 
   }
   else {
-    conn.send("{chat_msg}"+username+"::"+msg.value);
+    conn.send("{chat_msg}"+username.firstChild.value+"::"+msg.value);
   }
   msg.value = "";
   return false;

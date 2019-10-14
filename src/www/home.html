@@ -9,7 +9,7 @@ var conn;
 var username;
 var commands = {};
 commands["new_connection"] = function(result) {
-  const username = document.getElementById("display_username");
+  username = document.getElementById("display_username");
   while (username.firstChild) {
     username.removeChild(username.firstChild);
   }

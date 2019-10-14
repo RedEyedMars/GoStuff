@@ -1,5 +1,5 @@
 function checkUsername_(){
-  var username_val = document.getElementById("username").value ;
+  var username_val = username.firstChild.value ;
   if(/^[a-z0-9_-]{3,16}$/igm.test(username_val)){
     document.getElementById("username_status").src = "Success.jpg";
     document.getElementById("username_status").title = 'That username looks good!';
@@ -32,8 +32,6 @@ function login(username_val){
   document.getElementById("popup").style.display = "none";
   document.getElementById("chat_div").style.display = "block";
 
-  username = document.getElementById("displayusername");
-
   conn.send("{collect_channels}");
   conn.send("{collect_friends}");
   conn.send("{collect_resources}");
@@ -47,15 +45,13 @@ function logout(){
 function signin_() {
     if (checkUsername_()&&checkPassword_()){
       var password = document.getElementById("pass").value;
-      username = document.getElementById("username").value;
-      conn.send("{attempt_login}"+encrypt_(password+username));
+      conn.send("{attempt_login}"+encrypt_(password+username.firstChild.value));
     }
 };
 function signup_() {
     if (checkUsername_()&&checkPassword_()){
       var password = document.getElementById("pass").value;
-      username = document.getElementById("username").value;
-      conn.send("{attempt_signup}"+username+","+encrypt_(password+username));
+      conn.send("{attempt_signup}"+username+","+encrypt_(password+username.firstChild.value));
     }
 };
 function attempt_logout(){
@@ -67,13 +63,12 @@ function encrypt_(upwd){
 };
 
 commands["login_successful"] = function(result) {
-  const username_elem = document.getElementById("displayusername");
-  while (username_elem.firstChild) {
-    username_elem.removeChild(username_elem.firstChild);
+  while (username.firstChild) {
+    username.removeChild(username_elem.firstChild);
   }
   var item = document.createElement("div");
   item.innerHTML = createTextLinks_(result);
-  username_elem.appendChild(item);
+  username.appendChild(item);
 
   login(result);
 };
@@ -87,13 +82,12 @@ commands["login_failed"] = function(result){
   status.appendChild(item);
 };
 commands["signup_successful"] = function(result){
-  const username_elem = document.getElementById("displayusername");
-  while (username_elem.firstChild) {
-    username_elem.removeChild(username_elem.firstChild);
+  while (username.firstChild) {
+    username.removeChild(username.firstChild);
   }
   var item = document.createElement("div");
   item.innerHTML = createTextLinks_(result);
-  username_elem.appendChild(item);
+  username.appendChild(item);
 
   login(result);
 };
