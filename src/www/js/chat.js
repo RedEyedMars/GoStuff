@@ -25,13 +25,15 @@ function appendLog(inner) {
   var indexOfColon = inner.indexOf('::');
   if(indexOfColon>0){
     var chat_user = inner.substring(0,indexOfColon);
-    if(chat_user!=username.innerHTML){
+    if(chat_user==username.innerHTML){
+      item.className = "my_persons_chat";
+    } else {
       item.className = "other_persons_chat";
     }
     item.innerHTML = inner.substring(indexOfColon+2,inner.length);
     item.title = chat_user;
     console.log(log.lastChild!=null&&log.lastChild.title!=null&&log.lastChild.title!=""&&log.lastChild.title==chat_user);
-    while(log.lastChild!=null&&log.lastChild.title!=null&&log.lastChild.title!=""&&log.lastChild.title==chat_user){
+    while(log.lastChild!=null&&log.lastChild.title==chat_user){
       item.innerHTML = log.lastChild.innerHTML + "</br>" + item.innerHTML;
       log.removeChild(log.lastChild);
     }

@@ -177,7 +177,7 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 
 			switch command, msg := DifferentiateMessage(message); command {
 			case "chat_msg":
-				registry.broadcast <- message
+				registry.SendMsg(message)
 			case "new_connection":
 				//registry.broadcast <- []byte("{new_connection}" + c.conn.LocalAddr().String() + "::" + c.conn.RemoteAddr().String())
 				//registry.broadcast <- message
@@ -213,12 +213,20 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 								databasing.RequestMemberAction("Add", member, pwdAsString)
 							})
 							c.name = member.Name
+							<-databasing.RequestChannelAction("AddMember", "general", member.Name)
 							c.send <- []byte("{signup_successful}" + member.Name)
 						} else {
 							c.send <- []byte("{login_failed}Credentials not accepted, try a different password and username!")
 						}
 					}
 				})
+			case "collect_channels":
+				var channels []string
+				for channel := range databasing.RequestChannelsByName("ByMember", c.name) {
+					channels = append(channels, channel.Name)
+					channel.NewClient <- c.send
+				}
+				c.send <- []byte("{channel_names}" + strings.Join(channels, ";;"))
 			case "attempt_logout":
 				c.send <- []byte("{logout_successful}")
 				c.name = "_none_"

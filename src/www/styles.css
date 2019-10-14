@@ -16,10 +16,8 @@ body {
   margin: 0;
   padding: 0.5em 0.5em 0.5em 0.5em;
   position: absolute;
-  top: 0.5em;
-  left: 0.5em;
-  right: 0.5em;
-  bottom: 3em;
+  top: 30%;
+  left: 30%;
   overflow: auto;
   display:block;
 }
@@ -67,4 +65,8 @@ body {
 .other_persons_chat {
   text-align: left;
   outline: 2px solid green;
+  padding: 0.5em 0.5em 0.5em 0.5em;
+}
+.my_persons_chat {
+  padding: 0.5em 0.5em 0.5em 0.5em;
 }

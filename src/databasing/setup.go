@@ -166,6 +166,7 @@ func StartDatabase(Shutdown chan bool) {
 		Events.FuncEvent("databasing.SetupChannels", func() { SetupChannels(db) })
 
 		Events.GoFuncEvent("databasing.LoadAllMembers", func() { LoadAllMembers() })
+		Events.GoFuncEvent("databasing.LoadAllChannels", func() { LoadAllChannels() })
 
 		Events.FuncEvent("databasing.StartMessageListening", func() { StartMessageListening(db) })
 
