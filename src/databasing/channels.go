@@ -50,12 +50,12 @@ func (channel *Channel) HookUp() {
 		}
 	})
 }
-func NewChannelResponse(name string, arg ...string) *DBChannelResponse {
+func NewChannelResponse(name string, arg ...interface{}) *DBChannelResponse {
 	return NewChannelResponseArr(name, arg)
 }
-func NewChannelResponseArr(name string, args []string) *DBChannelResponse {
+func NewChannelResponseArr(name string, args []interface{}) *DBChannelResponse {
 	return &DBChannelResponse{
-		Query:    func() (*sql.Rows, error) { return dbQueries["Channels_"+name].Query(args) },
+		Query:    func() (*sql.Rows, error) { return dbQueries["Channels_"+name].Query(args...) },
 		Channels: make(chan *Channel, 1)}
 }
 func NewChannelActionArr(name string, args []interface{}) *DBActionResponse {
@@ -85,12 +85,12 @@ func SetupChannels(db *sql.DB) {
 
 	defineQuery(db, "Channels_AddMember", `INSERT INTO channels_names VALUES (?,?,NULL);`)
 }
-func RequestChannel(name string, args ...string) <-chan *Channel {
+func RequestChannel(name string, args ...interface{}) <-chan *Channel {
 	request := NewChannelResponseArr(name, args)
 	ChannelRequests <- request
 	return request.Channels
 }
-func RequestChannelsByName(name string, args ...string) <-chan *Channel {
+func RequestChannelsByName(name string, args ...interface{}) <-chan *Channel {
 	request := NewChannelResponseArr(name, args)
 	ChannelNamesRequests <- request
 	return request.Channels
