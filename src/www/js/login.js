@@ -66,9 +66,9 @@ function encrypt_(upwd){
 
 commands["login_successful"] = function(result) {
   const username = document.getElementById("display_username");
-  while (username.firstChild) {
+  /*while (username.firstChild) {
     username.removeChild(username.firstChild);
-  }
+  }*/
   var item = document.createElement("div");
   item.innerHTML = createTextLinks_(result);
   username.appendChild(item);
