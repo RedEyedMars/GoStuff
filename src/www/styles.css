@@ -37,6 +37,7 @@ body {
   background: white;
   margin: 0.5em;
   padding: 0.5em 0.5em 0.5em 0.5em;
+  width: 6em;
   overflow: auto;
   display:block;
 }
