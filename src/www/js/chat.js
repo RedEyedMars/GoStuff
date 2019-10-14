@@ -23,7 +23,7 @@ function appendLog(inner) {
   var indexOfColon = inner.indexOf('::');
   if(indexOfColon>0){
     var chat_user = inner.substring(0,indexOfColon);
-    if(chat_user==username.innerHTML){
+    if(chat_user!=username.innerHTML){
       item.className = "other_persons_chat";
     }
     item.innerHTML = inner.substring(indexOfColon+2,inner.length);
