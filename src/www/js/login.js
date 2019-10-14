@@ -67,7 +67,7 @@ function encrypt_(upwd){
 };
 
 commands["login_successful"] = function(result) {
-  username.value = result;
+  username.innerHTML = result;
 
   login(result);
 };
@@ -81,7 +81,7 @@ commands["login_failed"] = function(result){
   status.appendChild(item);
 };
 commands["signup_successful"] = function(result){
-  username.value = result;
+  username.innerHTML = result;
 
   login(result);
 };

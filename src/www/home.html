@@ -10,7 +10,7 @@ var username;
 var commands = {};
 commands["new_connection"] = function(result) {
   username = document.getElementById("displayusername");
-  username.value = result;
+  username.innerHTML = result;
 };
 </script>
 <script src='/forge-sha256.min.js'></script>
