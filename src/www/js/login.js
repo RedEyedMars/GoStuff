@@ -45,13 +45,15 @@ function logout(){
 function signin_() {
     if (checkUsername_()&&checkPassword_()){
       var password = document.getElementById("pass").value;
-      conn.send("{attempt_login}"+encrypt_(password+username.firstChild.value));
+      var user_val = document.getElementById("username").value;
+      conn.send("{attempt_login}"+encrypt_(password+user_val));
     }
 };
 function signup_() {
     if (checkUsername_()&&checkPassword_()){
       var password = document.getElementById("pass").value;
-      conn.send("{attempt_signup}"+username+","+encrypt_(password+username.firstChild.value));
+      var user_val = document.getElementById("username").value;
+      conn.send("{attempt_signup}"+username+","+encrypt_(password+user_val));
     }
 };
 function attempt_logout(){
