@@ -10,6 +10,7 @@ var username;
 var commands = {};
 commands["new_connection"] = function(result) {
   username = document.getElementById("displayusername");
+  console.log(">"+username);
   while (username.firstChild) {
     username.removeChild(username.firstChild);
   }
