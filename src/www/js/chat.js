@@ -26,7 +26,7 @@ function appendLog(inner) {
     if(chat_user==username.firstChild.value){
       item.className = "other_persons_chat";
     }
-    item.innerHTML = inner.substring(indexOfColon+2,inner.length());
+    item.innerHTML = inner.substring(indexOfColon+2,inner.length);
     item.title = char_user;
   } else {
     item.innerHTML = inner;
