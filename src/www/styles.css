@@ -48,10 +48,10 @@ body {
   margin: 0;
   padding: 0.5em 0.5em 0.5em 0.5em;
   position: absolute;
-  top: 2.5em;
+  top: 6.5em;
   left: 0.5em;
   right: 0.5em;
-  bottom: 2.5em;
+  bottom: 1.5em;
   overflow: auto;
 }
 #chat {
