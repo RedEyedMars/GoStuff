@@ -25,7 +25,6 @@ function appendLog(inner) {
   var indexOfColon = inner.indexOf('::');
   if(indexOfColon>0){
     var chat_user = inner.substring(0,indexOfColon);
-    var log = document.getElementById("log");
     if(chat_user!=username.innerHTML){
       item.className = "other_persons_chat";
     }
