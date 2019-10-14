@@ -29,7 +29,6 @@ body {
   position: absolute;
   top: 0.5em;
   left: 7.5em;
-  width: 85%;
   overflow: auto;
   display:block;
 }
