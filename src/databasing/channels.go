@@ -43,7 +43,6 @@ func (channel *Channel) HookUp() {
 					case client <- msg:
 					default:
 						delete(clients, client)
-						close(client)
 					}
 				}
 			}
