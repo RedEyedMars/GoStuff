@@ -40,7 +40,7 @@ body {
   padding: 0.5em 0.5em 0.5em 0.5em;
   width: 6em;
   overflow: auto;
-  display:block;
+  display:inline-block;
 }
 
 .name_status_img {
