@@ -72,6 +72,16 @@ function encrypt_(upwd){
   return forge_sha256(upwd);
 };
 
+function appendSigninStatus(val){
+  const status = document.getElementById("account_signin_status");
+  while (status.firstChild) {
+    status.removeChild(status.firstChild);
+  }
+  var item = document.createElement("div");
+  item.innerHTML = createTextLinks_(msg);
+  status.appendChild(item);
+};
+
 commands["login_successful"] = function(msg,chl,user) {
 
   login(user);
@@ -89,13 +99,7 @@ commands["signup_successful"] = function(msg,chl,user){
   login(user);
 };
 commands["signup_failed"] = function(msg,chl,user){
-  const status = document.getElementById("account_signin_status");
-  while (status.firstChild) {
-    status.removeChild(status.firstChild);
-  }
-  var item = document.createElement("div");
-  item.innerHTML = createTextLinks_(msg);
-  status.appendChild(item);
+  appendSigninStatus(msg)
 };
 commands["logout_successful"] = function(msg,chl,user){
   logout();

@@ -66,7 +66,12 @@ function submit_chat() {
 
   }
   else {
-    conn.send("{chat_msg}"+username.innerHTML+"::"+msg.value);
+    var chl = document.getElementById("selected_channel");
+    if(chl){
+      conn.send("{chat_msg::"+chl.innerHTML+";;"+username.innerHTML+"}"+msg.value);
+    } else {
+      conn.send("{chat_msg;;"+username.innerHTML+"}"+msg.value);
+    }
   }
   msg.value = "";
   return false;

@@ -42,6 +42,9 @@ body {
   overflow: auto;
   display:inline-block;
 }
+#selected_channel {
+  background: green;
+}
 
 .name_status_img {
   width: 20px;

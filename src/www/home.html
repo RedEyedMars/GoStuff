@@ -31,7 +31,10 @@ window.onload = function () {
   if (window["WebSocket"]) {
     conn = new WebSocket("ws://" + document.location.host + "/ws");
     conn.onopen = function (evt) { conn.send("{new_connection}"); };
-    conn.onclose = function (evt) { appendLog("<b>Connection closed.</b>"); };
+    conn.onclose = function (evt) {
+      appendLog("<b>Connection closed.</b>");
+      appendSigninStatus("<b>Connection closed.</b>");
+    };
     conn.onmessage = function (evt) {
         var result = /\{([^\{\};:?]+)(::)?([a-zA-Z0-9_-]+)?(;;)?([a-zA-Z0-9_-]+)?\}(.*)/g.exec(evt.data);
         console.log(result)
@@ -39,7 +42,7 @@ window.onload = function () {
     };
   } else {
     appendLog("<b>Your browser does not support WebSockets.</b>");
-    document.getElementById("account_signin_status").appendChild(item);
+    appendSigninStatus("<b>Your browser does not support WebSockets.</b>");
   }
 };
 </script>

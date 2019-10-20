@@ -6,6 +6,13 @@ function appendChannel(channel_name){
   item.className = "channel";
   channels.appendChild(item);
 };
+function selectChannel(elem){
+  var chl = document.getElementById("selected_channel");
+  if(chl){
+    chl.id = "";
+  }
+  elem.id = "selected_channel";
+};
 
 commands["channel_names"] = function(msg,chl,user){
     var messages = msg.split('::');
@@ -13,5 +20,5 @@ commands["channel_names"] = function(msg,chl,user){
       appendChannel(messages[i]);
       appendChannel(messages[i]);
     }
-
+    selectChannel(channels.firstChild);
 };
