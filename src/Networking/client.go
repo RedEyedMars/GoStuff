@@ -175,7 +175,7 @@ func setupCommands(registry *ClientRegistry) {
 }
 
 func (c *Client) handleMessages(registry *ClientRegistry) {
-	for message := <-c.handle {
+	for message := range c.handle {
 
 		Logger.VeryVerbose <- Logger.Msg{string(message), "Receive"}
 
