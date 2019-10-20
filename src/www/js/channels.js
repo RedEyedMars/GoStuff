@@ -6,7 +6,6 @@ function appendChannel(channel_name){
   channel_title.className = "channel_title";
 
   var channel_log = document.createElement("div");
-  channel_log.innerHTML = channel_name;
   channel_log.className = "channel_logs";
 
   channel_title.onclick = function(){selectChannel(channel_title,channel_log);};
@@ -35,7 +34,6 @@ function selectChannel(c_title,c_log){
 commands["channel_names"] = function(msg,chl,user){
     var messages = msg.split('::');
     for (var i = 0; i < messages.length; i++) {
-      appendChannel(messages[i]);
       appendChannel(messages[i]);
     }
     selectChannel(channel_titles.firstChild,logs.firstChild);

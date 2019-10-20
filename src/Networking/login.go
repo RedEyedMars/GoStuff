@@ -44,6 +44,7 @@ func setupLoginCommands(registry *ClientRegistry) {
 				})
 				c.name = member.Name
 				<-databasing.RequestChannelAction("AddMember", "general", member.Name)
+				<-databasing.RequestChannelAction("AddMember", "private", member.Name)
 				c.send <- []byte(fmt.Sprintf("{signup_successful;;%s}", member.Name))
 			} else {
 				c.send <- []byte("{login_failed}Credentials not accepted, try a different password and username!")
