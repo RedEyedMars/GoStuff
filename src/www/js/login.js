@@ -45,8 +45,8 @@ function logout(){
   document.getElementById("popup").style.display = "block";
   document.getElementById("chat_div").style.display = "none";
 
-  while (channels.firstChild) {
-    channels.removeChild(channels.firstChild);
+  while (channel_titles.firstChild) {
+    channel_titles.removeChild(channel_titles.firstChild);
   }
 
 }

@@ -20,32 +20,38 @@ function createTextLinks_(text) {
 function appendLog(inner){
   appendChat(inner,null,null)
 }
-function appendChat(inner,chl,user) {
-  var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
+function appendChat(msg,chl,user) {
 
-  var item = document.createElement("div");
-  if(user){
-    var chat_user = inner.substring(0,indexOfColon);
-    if(chat_user==username.innerHTML){
-      item.className = "my_persons_chat";
-    } else {
-      item.className = "other_persons_chat";
-    }
-    item.innerHTML = inner.substring(indexOfColon+2,inner.length);
-    item.title = chat_user;
-    console.log(log.lastChild!=null&&log.lastChild.title!=null&&log.lastChild.title!=""&&log.lastChild.title==chat_user);
-    while(log.lastChild!=null&&log.lastChild.title==chat_user){
-      item.innerHTML = log.lastChild.innerHTML + "</br>" + item.innerHTML;
-      log.removeChild(log.lastChild);
-    }
-    log.appendChild(item);
+  var new_chat = document.createElement("div");
+
+  var channel_log;
+  if(chl){
+    channel_log = channel_logs[chl];
   } else {
-    item.innerHTML = inner;
-    log.appendChild(item);
+    channel_log = document.getElementById("channel_log");
+  }
+
+  var doScroll = channel_log.scrollTop > channel_log.scrollHeight - channel_log.clientHeight - 1;
+  if(user){
+    if(user==username.innerHTML){
+      new_chat.className = "my_persons_chat";
+    } else {
+      new_chat.className = "other_persons_chat";
+    }
+    new_chat.innerHTML = msg;
+    new_chat.title = user;
+    while(channel_log.lastChild!=null&&channel_log.lastChild.title==user){
+      new_chat.innerHTML = channel_log.lastChild.innerHTML + "</br>" + new_chat.innerHTML;
+      channel_log.removeChild(channel_log.lastChild);
+    }
+    channel_log.appendChild(item);
+  } else {
+    new_chat.innerHTML = msg;
+    channel_log.appendChild(new_chat);
   }
 
   if (doScroll) {
-      log.scrollTop = log.scrollHeight - log.clientHeight;
+      channel_log.scrollTop = channel_log.scrollHeight - channel_log.clientHeight;
   }
 };
 
@@ -82,12 +88,12 @@ function submit_chat() {
 commands["chat_msg"] = function(msg,chl,user){
     var messages = msg.split('\n');
     for (var i = 0; i < messages.length; i++) {
-      appendLog(createTextLinks_(messages[i]));
+      appendLog(createTextLinks_(messages[i]),chl,user);
     }
 };
 commands["admin_msg"] = function(msg,chl,user){
     var messages = msg.split('\n');
     for (var i = 0; i < messages.length; i++) {
-      appendLog(createTextLinks_(messages[i]));
+      appendLog(createTextLinks_(messages[i]),chl,user);
     }
 };

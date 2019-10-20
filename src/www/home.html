@@ -7,11 +7,12 @@
 <script type="text/javascript">
 var conn;
 var username;
-var channels;
+var channel_tiles;
+var channel_logs = {};
 var commands = {};
 commands["new_connection"] = function(msg,chl,user) {
   username = document.getElementById("displayusername");
-  channels = document.getElementById("channels");
+  channel_titles = document.getElementById("channel_titles");
   username.innerHTML = result;
 };
 </script>
@@ -23,9 +24,9 @@ commands["new_connection"] = function(msg,chl,user) {
 
 window.onload = function () {
   const msg = document.getElementById("msg");
-  const log = document.getElementById("log");
+  const log = document.getElementById("log_div");
   username = document.getElementById("displayusername");
-  channels = document.getElementById("channels");
+  channel_titles = document.getElementById("channel_titles");
 
   document.getElementById("chat").onsubmit = submit_chat;
   if (window["WebSocket"]) {
@@ -63,8 +64,8 @@ window.onload = function () {
 </div>
 <div id="chat_div">
   <div id="displayusername"></div>
-  <div id="channels"></div>
-  <div id="log"></div>
+  <div id="channel_titles"></div>
+  <div id="log_div"></div>
   <form id="chat">
     <input type="submit" value="Send" />
     <input type="text" id="msg" size="64"/>
