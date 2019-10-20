@@ -17,7 +17,7 @@ func setupNetworkingRegex() {
 	reCurls = regexp.MustCompile(`\\{([^\\}]+)\\}`)
 	reAngles = regexp.MustCompile(`<([^>]+)>`)
 
-	reCommandMsg = regexp.MustCompile(`\{([^\{\}:;]+)(::)?([a-zA-Z0-9_-]+)(;;)?([a-zA-Z0-9_-]+)?\}(.*)`)
+	reCommandMsg = regexp.MustCompile(`\{([^\{\}:;]+)(::)?([a-zA-Z0-9_-]+)?(;;)?([a-zA-Z0-9_-]+)?\}(.*)`)
 	reIPvPort = regexp.MustCompile(`([^:]+):(.+)`)
 }
 func DifferentiateMessage(incomingMsg []byte) (string, []byte, []byte, []byte) {
