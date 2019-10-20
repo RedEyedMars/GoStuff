@@ -35,8 +35,8 @@ body {
 }
 .channel_title {
   background: white;
-  margin: 0.5em;
-  padding: 0.5em 0.25em 0.5em 0.25em;
+  margin: 0.25em;
+  padding: 0.5em 0.5em 0.5em 0.5em;
   width: 6em;
   overflow: auto;
   display:inline-block;
