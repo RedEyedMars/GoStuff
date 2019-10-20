@@ -43,7 +43,7 @@ body {
   display:inline-block;
 }
 #selected_channel {
-  background: green;
+  background: LightGreen;
 }
 
 .name_status_img {

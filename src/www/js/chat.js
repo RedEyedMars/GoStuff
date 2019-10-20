@@ -17,8 +17,10 @@ function createTextLinks_(text) {
       }
     });
 };
-
-function appendLog(inner) {
+function appendLog(inner){
+  appendChat(inner,null,null)
+}
+function appendChat(inner,chl,user) {
   var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
 
   var item = document.createElement("div");
