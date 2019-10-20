@@ -4,6 +4,7 @@ function appendChannel(channel_name){
   var item = document.createElement("div");
   item.innerHTML = channel_name;
   item.className = "channel";
+  item.onclick = function(){selectChannel(item);};
   channels.appendChild(item);
 };
 function selectChannel(elem){

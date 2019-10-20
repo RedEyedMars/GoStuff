@@ -24,8 +24,7 @@ function appendChat(inner,chl,user) {
   var doScroll = log.scrollTop > log.scrollHeight - log.clientHeight - 1;
 
   var item = document.createElement("div");
-  var indexOfColon = inner.indexOf('::');
-  if(indexOfColon>0){
+  if(user){
     var chat_user = inner.substring(0,indexOfColon);
     if(chat_user==username.innerHTML){
       item.className = "my_persons_chat";
