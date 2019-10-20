@@ -33,6 +33,7 @@ function login(username_val){
   document.getElementById("chat_div").style.display = "block";
 
   username = document.getElementById("displayusername");
+  username.innerHTML = username_val;
 
   conn.send("{collect_channels}");
   conn.send("{collect_friends}");
@@ -43,6 +44,11 @@ function login(username_val){
 function logout(){
   document.getElementById("popup").style.display = "block";
   document.getElementById("chat_div").style.display = "none";
+
+  while (channels.firstChild) {
+    channels.removeChild(channels.firstChild);
+  }
+
 }
 function signin_() {
     if (checkUsername_()&&checkPassword_()){
@@ -67,7 +73,6 @@ function encrypt_(upwd){
 };
 
 commands["login_successful"] = function(msg,chl,user) {
-  username.innerHTML = user;
 
   login(user);
 };
@@ -81,8 +86,6 @@ commands["login_failed"] = function(msg,chl,user){
   status.appendChild(item);
 };
 commands["signup_successful"] = function(msg,chl,user){
-  username.innerHTML = user;
-
   login(user);
 };
 commands["signup_failed"] = function(msg,chl,user){
