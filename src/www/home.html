@@ -34,6 +34,7 @@ window.onload = function () {
     conn.onclose = function (evt) { appendLog("<b>Connection closed.</b>"); };
     conn.onmessage = function (evt) {
         var result = /\{([^\{\}]+)\}(.*)/g.exec(evt.data);
+        console.log(result)
         commands[result[1]](result[2]);
     };
   } else {
