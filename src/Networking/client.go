@@ -180,11 +180,13 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 		Logger.VeryVerbose <- Logger.Msg{string(message), "Receive"}
 
 		command, msg, chl, user := DifferentiateMessage(message)
-		Events.GoFuncEvent("client."+command, func() {
-			if cmd, ok := commands[command]; ok {
+		if cmd, ok := commands[command]; ok {
+			Events.GoFuncEvent("client."+command, func() {
 				cmd(c, msg, chl, user)
-			}
-		})
+			})
+		} else {
+			Logger.Verbose <- Logger.Msg{"Command not found:" + command}
+		}
 		//default:
 		//	Logger.VeryVerbose <- Logger.Msg{"HandleMessages.Unregister"}
 		//	registry.unregister <- c
