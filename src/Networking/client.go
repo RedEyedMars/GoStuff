@@ -180,7 +180,11 @@ func (c *Client) handleMessages(registry *ClientRegistry) {
 		Logger.VeryVerbose <- Logger.Msg{string(message), "Receive"}
 
 		command, msg, chl, user := DifferentiateMessage(message)
-		Events.GoFuncEvent("client."+command, func() { commands[command](c, msg, chl, user) })
+		Events.GoFuncEvent("client."+command, func() {
+			if cmd, ok := commands[command]; ok {
+				cmd(c, msg, chl, user)
+			}
+		})
 		//default:
 		//	Logger.VeryVerbose <- Logger.Msg{"HandleMessages.Unregister"}
 		//	registry.unregister <- c
