@@ -9,6 +9,7 @@ var conn;
 var username;
 var channel_tiles;
 var channel_logs = {};
+var logs;
 var commands = {};
 commands["new_connection"] = function(msg,chl,user) {
   username = document.getElementById("displayusername");
@@ -24,7 +25,7 @@ commands["new_connection"] = function(msg,chl,user) {
 
 window.onload = function () {
   const msg = document.getElementById("msg");
-  const log = document.getElementById("log_div");
+  logs = document.getElementById("log_div");
   username = document.getElementById("displayusername");
   channel_titles = document.getElementById("channel_titles");
 

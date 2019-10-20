@@ -12,7 +12,7 @@ function appendChannel(channel_name){
   channel_title.onclick = function(){selectChannel(channel_title,channel_log);};
 
   channel_titles.appendChild(channel_title);
-  log.appendChild(channel_log);
+  logs.appendChild(channel_log);
 
   channel_logs[channel_name] = channel_log;
 };
@@ -38,5 +38,5 @@ commands["channel_names"] = function(msg,chl,user){
       appendChannel(messages[i]);
       appendChannel(messages[i]);
     }
-    selectChannel(channel_titles.firstChild,log.firstChild);
+    selectChannel(channel_titles.firstChild,logs.firstChild);
 };
