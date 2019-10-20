@@ -20,8 +20,10 @@ func setupLoginCommands(registry *ClientRegistry) {
 			databasing.AddMemberToMaps(member)
 			c.name = member.Name
 			c.send <- []byte(fmt.Sprintf("{login_successful;;%s}", member.Name))
+			Logger.Verbose <- Logger.Msg{"Login successful"}
 		} else {
 			c.send <- []byte("{login_failed}Credentials not accepted, either check your password or your username!")
+			Logger.Verbose <- Logger.Msg{"Login failed"}
 		}
 	}
 	commands["attempt_signup"] = func(c *Client, msg []byte, cln []byte, user []byte) {
