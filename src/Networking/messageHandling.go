@@ -17,12 +17,22 @@ func setupNetworkingRegex() {
 	reCurls = regexp.MustCompile(`\\{([^\\}]+)\\}`)
 	reAngles = regexp.MustCompile(`<([^>]+)>`)
 
-	reCommandMsg = regexp.MustCompile(`\{([^\{\}]+)\}(.*)`)
+	reCommandMsg = regexp.MustCompile(`\{([^\{\}:;]+)(::)?([a-zA-Z0-9_-]+)(;;)?([a-zA-Z0-9_-]+)?\}(.*)`)
 	reIPvPort = regexp.MustCompile(`([^:]+):(.+)`)
 }
-func DifferentiateMessage(incomingMsg []byte) (string, []byte) {
+func DifferentiateMessage(incomingMsg []byte) (string, []byte, []byte, []byte) {
 	result := reCommandMsg.FindSubmatch(incomingMsg)
-	return string(result[1]), result[2]
+	switch len(result) {
+	case 5:
+		if string(result[2]) == "::" {
+			return string(result[1]), result[4], result[3], nil
+		} else {
+			return string(result[1]), result[4], nil, result[3]
+		}
+	case 7:
+		return string(result[1]), result[6], result[3], result[5]
+	}
+	return string(result[1]), result[2], nil, nil
 }
 func GetIPFromAddress(ipAddress string) (string, int) {
 
@@ -41,4 +51,31 @@ func SanatizeMessage(incomingMsg []byte) []byte {
 		func(angle []byte) []byte {
 			return []byte("&lt" + string(angle) + "&gt")
 		})
+}
+
+func ConstructMessage(header string, msg []byte, chl []byte, user []byte) []byte {
+	if chl != nil {
+		if user != nil {
+			return concatCopyPreAllocate([]byte("{"+header), []byte("::"), chl, []byte(";;"), user, []byte("}"), msg)
+		}
+		return concatCopyPreAllocate([]byte("{"+header), []byte("::"), chl, []byte("}"), msg)
+	} else {
+		if user != nil {
+			return concatCopyPreAllocate([]byte("{"+header), []byte(";;"), user, []byte("}"), msg)
+		}
+		return concatCopyPreAllocate([]byte("{"+header), []byte("}"), msg)
+	}
+}
+
+func concatCopyPreAllocate(slices ...[]byte) []byte {
+	var totalLen int
+	for _, s := range slices {
+		totalLen += len(s)
+	}
+	tmp := make([]byte, totalLen)
+	var i int
+	for _, s := range slices {
+		i += copy(tmp[i:], s)
+	}
+	return tmp
 }

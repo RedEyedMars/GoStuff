@@ -2,7 +2,6 @@ package Networking
 
 import (
 	"Events"
-	"bytes"
 	"databasing"
 )
 
@@ -47,10 +46,10 @@ func (h *ClientRegistry) Broadcast(message []byte) {
 	}
 }
 
-func (h *ClientRegistry) SendMsg(chat_msg []byte) {
+func (h *ClientRegistry) SendMsg(chl []byte, chat_msg []byte) {
 
-	if indexOfSemicolon := bytes.Index(chat_msg, []byte(";;")); indexOfSemicolon > 0 {
-		if channel, ok := databasing.Channels[string(chat_msg[0:indexOfSemicolon])]; ok {
+	if chl != nil {
+		if channel, ok := databasing.Channels[string(chl)]; ok {
 			channel.Send <- SanatizeMessage(chat_msg)
 		}
 	} else {

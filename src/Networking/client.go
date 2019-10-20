@@ -4,11 +4,7 @@ import (
 	"Events"
 	"Logger"
 	"bytes"
-	"crypto/sha256"
-	"databasing"
-	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -168,100 +164,26 @@ const (
 var mode = client
 var adminCommands map[string]Events.Event
 var adminArgs []string
+var commands map[string]func(*Client, []byte, []byte, []byte)
+
+func setupCommands(registry *ClientRegistry) {
+	commands = make(map[string]func(*Client, []byte, []byte, []byte))
+	commands["new_connection"] = func(c *Client, msg []byte, chl []byte, user []byte) {}
+	setupAdminCommands(registry)
+	setupChatCommands(registry)
+	setupLoginCommands(registry)
+}
 
 func (c *Client) handleMessages(registry *ClientRegistry) {
-	for {
-		select {
-		case message := <-c.handle:
-			Logger.VeryVerbose <- Logger.Msg{string(message), "Receive"}
+	for message := <-c.handle {
 
-			switch command, msg := DifferentiateMessage(message); command {
-			case "chat_msg":
-				registry.SendMsg(message)
-			case "new_connection":
-				//registry.broadcast <- []byte("{new_connection}" + c.conn.LocalAddr().String() + "::" + c.conn.RemoteAddr().String())
-				//registry.broadcast <- message
-			case "attempt_login":
-				Events.GoFuncEvent("client.AttemptLogin", func() {
-					hash := sha256.New()
-					hash.Write([]byte(adminPassword))
-					hash.Write(msg)
-					pwdAsString := fmt.Sprintf("%x", hash.Sum(nil)[:])
-					if member := <-databasing.RequestMember("ByPwd", pwdAsString); member != nil {
-						databasing.AddMemberToMaps(member)
-						c.name = member.Name
-						c.send <- []byte("{login_successful}" + member.Name)
-					} else {
-						c.send <- []byte("{login_failed}Credentials not accepted, either check your password or your username!")
-					}
-				})
-			case "attempt_signup":
-				Events.GoFuncEvent("client.AttemptSignup", func() {
-					split := strings.Split(string(msg), ",")
-					username, pwd := split[0], split[1]
-					if member := <-databasing.RequestMember("ByName", username); member != nil {
-						c.send <- []byte("{signup_failed}Username taken!")
-					} else {
-						Logger.Verbose <- Logger.Msg{"No member found; good!"}
-						hash := sha256.New()
-						hash.Write([]byte(adminPassword))
-						hash.Write([]byte(pwd))
-						pwdAsString := fmt.Sprintf("%x", hash.Sum(nil)[:])
-						if member := <-databasing.RequestMember("ByPwd", pwdAsString); member == nil {
-							member := databasing.NewMemberFull(username)
-							Events.GoFuncEvent("client.Signup.AddMember", func() {
-								databasing.RequestMemberAction("Add", member, pwdAsString)
-							})
-							c.name = member.Name
-							<-databasing.RequestChannelAction("AddMember", "general", member.Name)
-							c.send <- []byte("{signup_successful}" + member.Name)
-						} else {
-							c.send <- []byte("{login_failed}Credentials not accepted, try a different password and username!")
-						}
-					}
-				})
-			case "collect_channels":
-				var channels []string
-				for channel := range databasing.RequestChannelsByName("ByMember", c.name) {
-					if channel != nil {
-						channels = append(channels, channel.Name)
-						channel.NewClient <- c.send
-					}
-				}
-				c.send <- []byte("{channel_names}" + strings.Join(channels, ";;"))
-			case "attempt_logout":
-				c.send <- []byte("{logout_successful}")
-				c.name = "_none_"
-			case "/mode":
-				switch string(msg) {
-				case "admin":
-					mode = adminPasswordRequired
-					c.send <- []byte("{admin_msg}Enter password:")
-				default:
-					mode = client
-				}
-				if mode == client {
-					Logger.Verbose <- Logger.Msg{"Client.HandleMessages", "Client"}
-				} else {
-					Logger.Verbose <- Logger.Msg{"Client.HandleMessages", "Ask for Password"}
-				}
+		Logger.VeryVerbose <- Logger.Msg{string(message), "Receive"}
 
-			case "/pwd":
-				if mode == adminPasswordRequired && string(msg) == adminPassword {
-					c.send <- []byte("{admin_msg}Access Granted!")
-					mode = admin
-				} else {
-					c.send <- []byte("{admin_msg}Access Denied!")
-					mode = client
-				}
-			case "/":
-				if mode == admin {
-					HandleAdminCommand(string(msg))
-				}
-			}
-			//default:
-			//	Logger.VeryVerbose <- Logger.Msg{"HandleMessages.Unregister"}
-			//	registry.unregister <- c
-		}
+		command, msg, chl, user := DifferentiateMessage(message)
+		Events.GoFuncEvent("client."+command, func() { commands[command](c, msg, chl, user) })
+		//default:
+		//	Logger.VeryVerbose <- Logger.Msg{"HandleMessages.Unregister"}
+		//	registry.unregister <- c
+
 	}
 }
