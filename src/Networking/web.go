@@ -111,6 +111,8 @@ func StartWebClient(toClose chan bool) {
 	registry := newRegistry()
 	go registry.run()
 
+	setupClientCommands(registry)
+
 	http.HandleFunc("/", serveHome)
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		serveWs(registry, w, r)

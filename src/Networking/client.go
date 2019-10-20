@@ -166,7 +166,7 @@ var adminCommands map[string]Events.Event
 var adminArgs []string
 var commands map[string]func(*Client, []byte, []byte, []byte)
 
-func setupCommands(registry *ClientRegistry) {
+func setupClientCommands(registry *ClientRegistry) {
 	commands = make(map[string]func(*Client, []byte, []byte, []byte))
 	commands["new_connection"] = func(c *Client, msg []byte, chl []byte, user []byte) {}
 	setupAdminCommands(registry)
