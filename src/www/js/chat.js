@@ -73,14 +73,14 @@ function submit_chat() {
 };
 
 
-commands["chat_msg"] = function(result){
-    var messages = result.split('\n');
+commands["chat_msg"] = function(msg,chl,user){
+    var messages = msg.split('\n');
     for (var i = 0; i < messages.length; i++) {
       appendLog(createTextLinks_(messages[i]));
     }
 };
-commands["admin_msg"] = function(result){
-    var messages = result.split('\n');
+commands["admin_msg"] = function(msg,chl,user){
+    var messages = msg.split('\n');
     for (var i = 0; i < messages.length; i++) {
       appendLog(createTextLinks_(messages[i]));
     }

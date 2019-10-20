@@ -9,7 +9,7 @@ var conn;
 var username;
 var channels;
 var commands = {};
-commands["new_connection"] = function(result) {
+commands["new_connection"] = function(msg,chl,user) {
   username = document.getElementById("displayusername");
   channels = document.getElementById("channels");
   username.innerHTML = result;
@@ -33,9 +33,9 @@ window.onload = function () {
     conn.onopen = function (evt) { conn.send("{new_connection}"); };
     conn.onclose = function (evt) { appendLog("<b>Connection closed.</b>"); };
     conn.onmessage = function (evt) {
-        var result = /\{([^\{\}]+)\}(.*)/g.exec(evt.data);
+        var result = /\{([^\{\};:?]+)(::)?([a-zA-Z0-9_-]+)?(;;)?([a-zA-Z0-9_-]+)?\}(.*)/g.exec(evt.data);
         console.log(result)
-        commands[result[1]](result[2]);
+        commands[result[1]](result[6],result[3],result[5]);
     };
   } else {
     appendLog("<b>Your browser does not support WebSockets.</b>");

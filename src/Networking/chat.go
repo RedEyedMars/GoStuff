@@ -18,6 +18,6 @@ func setupChatCommands(registry *ClientRegistry) {
 				channel.NewClient <- c.send
 			}
 		}
-		c.send <- []byte("{channel_names}" + strings.Join(channels, ";w;"))
+		c.send <- []byte("{channel_names}" + strings.Join(channels, "::"))
 	}
 }

@@ -7,8 +7,8 @@ function appendChannel(channel_name){
   channels.appendChild(item);
 };
 
-commands["channel_names"] = function(result){
-    var messages = result.split(';;');
+commands["channel_names"] = function(msg,chl,user){
+    var messages = msg.split('::');
     for (var i = 0; i < messages.length; i++) {
       appendChannel(messages[i]);
       appendChannel(messages[i]);

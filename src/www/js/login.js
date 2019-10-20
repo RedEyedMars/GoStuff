@@ -66,34 +66,34 @@ function encrypt_(upwd){
   return forge_sha256(upwd);
 };
 
-commands["login_successful"] = function(result) {
-  username.innerHTML = result;
+commands["login_successful"] = function(msg,chl,user) {
+  username.innerHTML = user;
 
-  login(result);
+  login(user);
 };
-commands["login_failed"] = function(result){
+commands["login_failed"] = function(msg,chl,user){
   const status = document.getElementById("account_signin_status");
   while (status.firstChild) {
     status.removeChild(status.firstChild);
   }
   var item = document.createElement("div");
-  item.innerHTML = createTextLinks_(result);
+  item.innerHTML = createTextLinks_(msg);
   status.appendChild(item);
 };
-commands["signup_successful"] = function(result){
-  username.innerHTML = result;
+commands["signup_successful"] = function(msg,chl,user){
+  username.innerHTML = user;
 
-  login(result);
+  login(user);
 };
-commands["signup_failed"] = function(result){
+commands["signup_failed"] = function(msg,chl,user){
   const status = document.getElementById("account_signin_status");
   while (status.firstChild) {
     status.removeChild(status.firstChild);
   }
   var item = document.createElement("div");
-  item.innerHTML = createTextLinks_(result);
+  item.innerHTML = createTextLinks_(msg);
   status.appendChild(item);
 };
-commands["logout_successful"] = function(result){
+commands["logout_successful"] = function(msg,chl,user){
   logout();
 };
