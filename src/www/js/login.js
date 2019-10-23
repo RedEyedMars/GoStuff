@@ -78,7 +78,7 @@ function appendSigninStatus(val){
     status.removeChild(status.firstChild);
   }
   var item = document.createElement("div");
-  item.innerHTML = createTextLinks_(msg);
+  item.innerHTML = createTextLinks_(val);
   status.appendChild(item);
 };
 

@@ -32,6 +32,9 @@ func (h *ClientRegistry) run_registry() {
 		case client := <-h.unregister:
 			Events.FuncEvent("ClientRegistry.Unregister", func() {
 				if _, ok := h.clients[client]; ok {
+					for channel := range client.channels {
+						databasing.Channels[channel].RemoveClient <- client.send
+					}
 					delete(h.clients, client)
 					close(client.send)
 				}

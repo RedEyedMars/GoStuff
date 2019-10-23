@@ -16,7 +16,7 @@ import (
 +---------------------+
 | Tables_in_chat_msg  |
 +---------------------+
-| channels_names      |
+| channels_user_info  |
 | client_names        |
 | messages            |
 | resource_allocation |
@@ -29,10 +29,11 @@ var dbQueries map[string]*sql.Stmt
 var ResourceRequests chan *DBResourceResponse
 var ResourcesRequests chan *DBResourcesResponse
 var ChatMsgRequests chan *DBChatMsgResponse
+var TimestampRequests chan *DBTimestampResponse
 var MemberRequests chan *DBMemberResponse
 var MemberNamesRequests chan *DBMemberResponse
 var ChannelRequests chan *DBChannelResponse
-var ChannelNamesRequests chan *DBChannelResponse
+var ChannelNamesRequests chan *DBClientChannelResponse
 var ActionRequests chan *DBActionResponse
 
 var LoadedResources map[string]*Resource
@@ -109,10 +110,11 @@ func Setup() {
 	ResourceRequests = make(chan *DBResourceResponse, 16)
 	ResourcesRequests = make(chan *DBResourcesResponse, 16)
 	ChatMsgRequests = make(chan *DBChatMsgResponse, 16)
+	TimestampRequests = make(chan *DBTimestampResponse, 16)
 	MemberRequests = make(chan *DBMemberResponse, 16)
 	MemberNamesRequests = make(chan *DBMemberResponse, 16)
 	ChannelRequests = make(chan *DBChannelResponse, 16)
-	ChannelNamesRequests = make(chan *DBChannelResponse, 16)
+	ChannelNamesRequests = make(chan *DBClientChannelResponse, 16)
 	ActionRequests = make(chan *DBActionResponse, 32)
 
 	LoadedResources = make(map[string]*Resource)
@@ -145,7 +147,7 @@ func StartDatabase(Shutdown chan bool) {
 	// Create the MySQL DNS string for the DB connection
 	// user:password@protocol(endpoint)/dbname?<params>
 
-	dnsStr := fmt.Sprintf("%s:%s@tcp(%s)/%s", dbUser, dbPassword, dbEndpoint, dbName)
+	dnsStr := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", dbUser, dbPassword, dbEndpoint, dbName)
 
 	// Use db to perform SQL operations on database
 	if db, err := sql.Open("mysql", dnsStr); err != nil {
@@ -184,6 +186,7 @@ func End() {
 		close(ResourceRequests)
 		close(ResourcesRequests)
 		close(ChatMsgRequests)
+		close(TimestampRequests)
 		close(MemberRequests)
 		close(MemberNamesRequests)
 		close(ChannelRequests)
@@ -211,6 +214,15 @@ func StartMessageListening(db *sql.DB) {
 				Events.GoFuncEvent("databasing.Resources.Parse", func() { request.Parse(rows) })
 			}
 		case request := <-ChatMsgRequests:
+			if request == nil {
+				return
+			}
+			if rows, err := request.Query(); err != nil {
+				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChatMsgRequest.Query"}
+			} else {
+				Events.GoFuncEvent("databasing.chatmgs.Parse", func() { request.Parse(rows) })
+			}
+		case request := <-TimestampRequests:
 			if request == nil {
 				return
 			}

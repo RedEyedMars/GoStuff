@@ -32,9 +32,13 @@ function selectChannel(c_title,c_log){
 };
 
 commands["channel_names"] = function(msg,chl,user){
-    var messages = msg.split('::');
-    for (var i = 0; i < messages.length; i++) {
-      appendChannel(messages[i]);
-    }
-    selectChannel(channel_titles.firstChild,logs.firstChild);
+  var messages = msg.split('::');
+  for (var i = 0; i < messages.length; i++) {
+    appendChannel(messages[i]);
+  }
+  selectChannel(channel_titles.firstChild,logs.firstChild);
+
+  //for (var i = 0; i < channel_titles.length; i++) {
+  //  conn.send("{collect_msgs::"+channel_titles[i].innerHTML+"}");
+  //}
 };

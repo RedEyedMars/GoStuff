@@ -51,17 +51,22 @@ type Client struct {
 
 	// Inbound messages from the clients.
 	handle chan []byte
+
+	//channe names
+	channels map[string]time.Time
 }
 
 func newClient(conn *websocket.Conn) *Client {
 	ip, port := GetIPFromAddress(conn.RemoteAddr().String())
 	return &Client{
-		conn:   conn,
-		ip:     ip,
-		port:   port,
-		name:   "_none_",
-		send:   make(chan []byte, 256),
-		handle: make(chan []byte)}
+		conn:     conn,
+		ip:       ip,
+		port:     port,
+		name:     "_none_",
+		send:     make(chan []byte, 256),
+		handle:   make(chan []byte),
+		channels: make(map[string]time.Time),
+	}
 }
 
 // readMessages pumps messages from the websocket connection to the hub.
