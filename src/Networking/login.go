@@ -7,6 +7,7 @@ import (
 	"databasing"
 	"fmt"
 	"strings"
+	"time"
 )
 
 func setupLoginCommands(registry *ClientRegistry) {
@@ -18,6 +19,7 @@ func setupLoginCommands(registry *ClientRegistry) {
 		pwdAsString := fmt.Sprintf("%x", hash.Sum(nil)[:])
 		if member := <-databasing.RequestMember("ByPwd", pwdAsString); member != nil {
 			databasing.AddMemberToMaps(member)
+			c.setupChannels()
 			c.name = member.Name
 			c.send <- []byte(fmt.Sprintf("{login_successful;;%s}", member.Name))
 			Logger.Verbose <- Logger.Msg{"Login successful"}
@@ -45,6 +47,8 @@ func setupLoginCommands(registry *ClientRegistry) {
 				c.name = member.Name
 				<-databasing.RequestChannelAction("AddMember", "general", member.Name)
 				<-databasing.RequestChannelAction("AddMember", "private", member.Name)
+
+				c.setupChannels()
 				c.send <- []byte(fmt.Sprintf("{signup_successful;;%s}", member.Name))
 			} else {
 				c.send <- []byte("{login_failed}Credentials not accepted, try a different password and username!")
@@ -55,5 +59,15 @@ func setupLoginCommands(registry *ClientRegistry) {
 	commands["attempt_logout"] = func(c *Client, msg []byte, chl []byte, user []byte) {
 		c.send <- []byte("{logout_successful}")
 		c.name = "_none_"
+		c.channels = make(map[string]time.Time)
+	}
+}
+
+func (c *Client) setupChannels() {
+	for channel := range databasing.RequestChannelsByName("ByMember", c.name) {
+		if channel != nil {
+			c.channels[channel.Channel.Name] = channel.LastKnown
+			channel.Channel.NewClient <- c.send
+		}
 	}
 }

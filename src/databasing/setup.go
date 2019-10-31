@@ -32,7 +32,7 @@ var ChatMsgRequests chan *DBChatMsgResponse
 var MemberRequests chan *DBMemberResponse
 var MemberNamesRequests chan *DBMemberResponse
 var ChannelRequests chan *DBChannelResponse
-var ChannelNamesRequests chan *DBChannelResponse
+var ChannelNamesRequests chan *DBClientChannelResponse
 var ActionRequests chan *DBActionResponse
 
 var LoadedResources map[string]*Resource
@@ -112,7 +112,7 @@ func Setup() {
 	MemberRequests = make(chan *DBMemberResponse, 16)
 	MemberNamesRequests = make(chan *DBMemberResponse, 16)
 	ChannelRequests = make(chan *DBChannelResponse, 16)
-	ChannelNamesRequests = make(chan *DBChannelResponse, 16)
+	ChannelNamesRequests = make(chan *DBClientChannelResponse, 16)
 	ActionRequests = make(chan *DBActionResponse, 32)
 
 	LoadedResources = make(map[string]*Resource)
