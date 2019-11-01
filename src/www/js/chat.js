@@ -29,6 +29,7 @@ function appendChat(msg,chl,user) {
     console.log(chl);
     channel_log = channel_logs[chl];
   } else {
+    console.log(chl);
     channel_log = document.getElementById("channel_log");
   }
 
