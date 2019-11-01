@@ -26,10 +26,8 @@ function appendChat(msg,chl,user) {
 
   var channel_log;
   if(chl){
-    console.log(chl);
     channel_log = channel_logs[chl];
   } else {
-    console.log(chl);
     channel_log = document.getElementById("channel_log");
   }
 
@@ -47,11 +45,9 @@ function appendChat(msg,chl,user) {
       channel_log.removeChild(channel_log.lastChild);
     }
     channel_log.appendChild(new_chat);
-    console.log(user);
   } else {
     new_chat.innerHTML = msg;
     channel_log.appendChild(new_chat);
-    console.log(user);
   }
 
   if (doScroll) {
@@ -92,7 +88,6 @@ function submit_chat() {
 commands["chat_msg"] = function(msg,chl,user){
     var messages = msg.split('\n');
     for (var i = 0; i < messages.length; i++) {
-      console.log("I am appending to chat!");
       appendChat(createTextLinks_(messages[i]),chl,user);
     }
 };

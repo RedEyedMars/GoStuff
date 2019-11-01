@@ -64,9 +64,8 @@ func setupLoginCommands(registry *ClientRegistry) {
 
 func (c *Client) setupChannels() {
 	for channel := range databasing.RequestChannelsByName("ByMember", c.name) {
-		Logger.Verbose <- Logger.Msg{"Channel?"}
 		if channel != nil {
-			Logger.Verbose <- Logger.Msg{"::" + channel.Channel.Name}
+			Logger.Verbose <- Logger.Msg{"Add channel:" + channel.Channel.Name}
 			c.channels[channel.Channel.Name] = channel
 			channel.Channel.NewClient <- c.send
 		}

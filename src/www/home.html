@@ -40,7 +40,6 @@ window.onload = function () {
     conn.onmessage = function (evt) {
         var result = /\{([^\{\};:?]+)(::)?([a-zA-Z0-9_-]+)?(;;)?([a-zA-Z0-9_-]+)?\}(.*)/g.exec(evt.data);
         console.log(result);
-        console.log(result[1]+":"+commands[result[1]]);
         commands[result[1]](result[6],result[3],result[5]);
     };
   } else {
