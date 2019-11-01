@@ -145,7 +145,7 @@ func StartDatabase(Shutdown chan bool) {
 	// Create the MySQL DNS string for the DB connection
 	// user:password@protocol(endpoint)/dbname?<params>
 
-	dnsStr := fmt.Sprintf("%s:%s@tcp(%s)/%s/?parseTime=true", dbUser, dbPassword, dbEndpoint, dbName)
+	dnsStr := fmt.Sprintf("%s:%s@tcp(%s)/%s?parseTime=true", dbUser, dbPassword, dbEndpoint, dbName)
 
 	// Use db to perform SQL operations on database
 	if db, err := sql.Open("mysql", dnsStr); err != nil {
