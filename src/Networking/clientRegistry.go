@@ -34,7 +34,9 @@ func (h *ClientRegistry) run_registry() {
 				if _, ok := h.clients[client]; ok {
 					delete(h.clients, client)
 					for _, chl := range client.channels {
-						chl.Channel.RemoveClient <- client.send
+						Events.FuncEvent("ClientRegistry.RemoveClient:"+client.name+" from "+chl.Channel.Name, func() {
+							chl.Channel.RemoveClient <- client.send
+						})
 					}
 					close(client.send)
 				}
