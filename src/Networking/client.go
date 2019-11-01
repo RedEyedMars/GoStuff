@@ -4,6 +4,7 @@ import (
 	"Events"
 	"Logger"
 	"bytes"
+	"databasing"
 	"net/http"
 	"time"
 
@@ -45,7 +46,7 @@ type Client struct {
 
 	name string
 
-	channels map[string]time.Time
+	channels map[string]*databasing.ClientChannel
 	// Buffered channel of outbound messages.
 	send chan []byte
 	// Registered clients.
@@ -61,7 +62,7 @@ func newClient(conn *websocket.Conn) *Client {
 		ip:       ip,
 		port:     port,
 		name:     "_none_",
-		channels: make(map[string]time.Time),
+		channels: make(map[string]*databasing.ClientChannel),
 		send:     make(chan []byte, 256),
 		handle:   make(chan []byte)}
 }

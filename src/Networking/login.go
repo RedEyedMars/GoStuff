@@ -7,7 +7,6 @@ import (
 	"databasing"
 	"fmt"
 	"strings"
-	"time"
 )
 
 func setupLoginCommands(registry *ClientRegistry) {
@@ -59,14 +58,14 @@ func setupLoginCommands(registry *ClientRegistry) {
 	commands["attempt_logout"] = func(c *Client, msg []byte, chl []byte, user []byte) {
 		c.send <- []byte("{logout_successful}")
 		c.name = "_none_"
-		c.channels = make(map[string]time.Time)
+		c.channels = make(map[string]*databasing.ClientChannel)
 	}
 }
 
 func (c *Client) setupChannels() {
 	for channel := range databasing.RequestChannelsByName("ByMember", c.name) {
 		if channel != nil {
-			c.channels[channel.Channel.Name] = channel.LastKnown
+			c.channels[channel.Channel.Name] = channel
 			channel.Channel.NewClient <- c.send
 		}
 	}
