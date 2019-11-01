@@ -14,8 +14,8 @@ func setupChatCommands(registry *ClientRegistry) {
 		var channels []string
 		for channel := range databasing.RequestChannelsByName("ByMember", c.name) {
 			if channel != nil {
-				channels = append(channels, channel.Name)
-				channel.NewClient <- c.send
+				channels = append(channels, channel.Channel.Name)
+				channel.Channel.NewClient <- c.send
 			}
 		}
 		c.send <- []byte("{channel_names}" + strings.Join(channels, "::"))
