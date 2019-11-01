@@ -150,7 +150,7 @@ func StartWebClient(toClose chan bool) {
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "Networking.Shutdown"}
 	}
 	go func() {
-		time.Sleep(1 * time.Hour)
+		time.Sleep(24 * time.Hour)
 		close(Shutdown)
 	}()
 }
