@@ -18,8 +18,8 @@ function createTextLinks_(text) {
     });
 };
 function appendLog(inner){
-  appendChat(inner,null,null)
-}
+  appendChat(inner,null,null);
+};
 function appendChat(msg,chl,user) {
 
   var new_chat = document.createElement("div");
@@ -92,6 +92,7 @@ function submit_chat() {
 commands["chat_msg"] = function(msg,chl,user){
     var messages = msg.split('\n');
     for (var i = 0; i < messages.length; i++) {
+      console.log("I am appending to chat!");
       appendChat(createTextLinks_(messages[i]),chl,user);
     }
 };
