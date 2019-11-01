@@ -31,7 +31,7 @@ function appendChat(msg,chl,user) {
     channel_log = document.getElementById("channel_log");
   }
 
-  var doScroll = channel_log.scrollTop > channel_log.scrollHeight - channel_log.clientHeight - 1;
+  //var doScroll = channel_log.scrollTop > channel_log.scrollHeight - channel_log.clientHeight - 1;
   if(user){
     if(user==username.innerHTML){
       new_chat.className = "my_persons_chat";
@@ -50,9 +50,9 @@ function appendChat(msg,chl,user) {
     channel_log.appendChild(new_chat);
   }
 
-  if (doScroll) {
-      channel_log.scrollTop = channel_log.scrollHeight - channel_log.clientHeight;
-  }
+  //if (doScroll) {
+  //    channel_log.scrollTop = channel_log.scrollHeight - channel_log.clientHeight;
+  //}
 };
 
 function submit_chat() {
