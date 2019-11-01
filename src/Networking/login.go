@@ -18,7 +18,7 @@ func setupLoginCommands(registry *ClientRegistry) {
 		pwdAsString := fmt.Sprintf("%x", hash.Sum(nil)[:])
 		if member := <-databasing.RequestMember("ByPwd", pwdAsString); member != nil {
 			databasing.AddMemberToMaps(member)
-			c.setupChannels()
+			Events.FuncEvent("Networking.attempt_login.setupChannel", c.setupChannels)
 			c.name = member.Name
 			c.send <- []byte(fmt.Sprintf("{login_successful;;%s}", member.Name))
 			Logger.Verbose <- Logger.Msg{"Login successful"}
@@ -64,7 +64,9 @@ func setupLoginCommands(registry *ClientRegistry) {
 
 func (c *Client) setupChannels() {
 	for channel := range databasing.RequestChannelsByName("ByMember", c.name) {
+		Logger.Verbose <- Logger.Msg{"Channel?"}
 		if channel != nil {
+			Logger.Verbose <- Logger.Msg{"::" + channel.Channel.Name}
 			c.channels[channel.Channel.Name] = channel
 			channel.Channel.NewClient <- c.send
 		}
