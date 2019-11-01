@@ -26,6 +26,7 @@ function appendChat(msg,chl,user) {
 
   var channel_log;
   if(chl){
+    console.log(chl);
     channel_log = channel_logs[chl];
   } else {
     channel_log = document.getElementById("channel_log");
@@ -44,7 +45,8 @@ function appendChat(msg,chl,user) {
       new_chat.innerHTML = channel_log.lastChild.innerHTML + "</br>" + new_chat.innerHTML;
       channel_log.removeChild(channel_log.lastChild);
     }
-    channel_log.appendChild(item);
+    channel_log.appendChild(new_chat);
+    console.log(user);
   } else {
     new_chat.innerHTML = msg;
     channel_log.appendChild(new_chat);
