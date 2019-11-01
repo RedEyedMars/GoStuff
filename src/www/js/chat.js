@@ -48,6 +48,7 @@ function appendChat(msg,chl,user) {
   } else {
     new_chat.innerHTML = msg;
     channel_log.appendChild(new_chat);
+    console.log(user);
   }
 
   if (doScroll) {
