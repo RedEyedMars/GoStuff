@@ -97,7 +97,7 @@ func RequestMember(name string, args ...interface{}) <-chan *Member {
 func RequestMembersByName(name string, args ...interface{}) <-chan *Member {
 	response := make(chan *Member, 1)
 	queries <- &DBQueryResponse{
-		query: "Channels_" + name,
+		query: "Members_" + name,
 		args:  args,
 		sender: &DBMemberResponse{
 			chl:       make(chan *Member, 1),
@@ -111,7 +111,7 @@ func parseMember(rows *sql.Rows) *Member {
 	if err := rows.Scan(&name); err != nil {
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.members.Parse"}
 	}
-	return &Member{Name: name}
+	return NewMemberFull(name)
 }
 func parseMemberByName(rows *sql.Rows) *Member {
 	var name string
