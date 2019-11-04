@@ -88,7 +88,7 @@ func RequestMember(name string, args ...interface{}) <-chan *Member {
 		query: "Members_" + name,
 		args:  args,
 		sender: &DBMemberResponse{
-			chl:       make(chan *Member, 1),
+			chl:       response,
 			assembler: parseMember,
 		},
 	}
@@ -100,7 +100,7 @@ func RequestMembersByName(name string, args ...interface{}) <-chan *Member {
 		query: "Members_" + name,
 		args:  args,
 		sender: &DBMemberResponse{
-			chl:       make(chan *Member, 1),
+			chl:       response,
 			assembler: parseMemberByName,
 		},
 	}

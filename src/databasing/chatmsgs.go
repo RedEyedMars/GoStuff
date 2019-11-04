@@ -61,7 +61,7 @@ func RequestChatMsg(name string, args ...interface{}) <-chan *ChatMsg {
 		query: "ChatMsg_" + name,
 		args:  args,
 		sender: &DBChatMsgResponse{
-			chl:       make(chan *ChatMsg, 1),
+			chl:       response,
 			assembler: parseChatMsg,
 		},
 	}

@@ -103,7 +103,7 @@ func RequestChannel(name string, args ...interface{}) <-chan *Channel {
 		query: "Channels_" + name,
 		args:  args,
 		sender: &DBChannelResponse{
-			chl:       make(chan *Channel, 1),
+			chl:       response,
 			assembler: parseChannel,
 		},
 	}
@@ -115,7 +115,7 @@ func RequestChannelsByName(name string, args ...interface{}) <-chan *ClientChann
 		query: "Channels_" + name,
 		args:  args,
 		sender: &DBClientChannelResponse{
-			chl:       make(chan *ClientChannel, 1),
+			chl:       response,
 			assembler: parseClientChannel,
 		},
 	}
