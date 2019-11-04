@@ -41,11 +41,11 @@ func setupLoginCommands(registry *ClientRegistry) {
 			if member := <-databasing.RequestMember("ByPwd", pwdAsString); member == nil {
 				member := databasing.NewMemberFull(username)
 				Events.GoFuncEvent("client.Signup.AddMember", func() {
-					databasing.RequestMemberAction("Add", member, pwdAsString)
+					databasing.RequestAction("Members", "Add", member, pwdAsString)
 				})
 				c.name = member.Name
-				<-databasing.RequestChannelAction("AddMember", "general", member.Name)
-				<-databasing.RequestChannelAction("AddMember", "private", member.Name)
+				<-databasing.RequestAction("Channels", "AddMember", "general", member.Name)
+				<-databasing.RequestAction("Channels", "AddMember", "private", member.Name)
 
 				Events.FuncEvent("Networking.attempt_login.setupChannel", c.setupChannels)
 				c.send <- []byte(fmt.Sprintf("{signup_successful;;%s}", member.Name))
