@@ -26,19 +26,11 @@ import (
 
 var dbQueries map[string]*sql.Stmt
 
-var ResourceRequests chan *DBResourceResponse
-var ResourcesRequests chan *DBResourcesResponse
-var ChatMsgRequests chan *DBChatMsgResponse
-var MemberRequests chan *DBMemberResponse
-var MemberNamesRequests chan *DBMemberResponse
-var ChannelRequests chan *DBChannelResponse
-var ChannelNamesRequests chan *DBClientChannelResponse
-var ActionRequests chan *DBActionResponse
+var queries chan dbQuery
+var actions chan dbQuery
 
 var LoadedResources map[string]*Resource
 var Channels map[string]*Channel
-
-var MembersByName map[string]*Member
 
 var reSanatizeDatabase *regexp.Regexp
 var reIsName *regexp.Regexp
@@ -46,9 +38,55 @@ var reIsName *regexp.Regexp
 var adminCommands map[string]Events.Event
 var adminArgs []string
 
+type sendable interface{}
+type dbQuery interface {
+	execute()
+}
+type dbSender interface {
+	send(*sql.Rows)
+	close()
+}
 type DBActionResponse struct {
-	Exec       func() (sql.Result, error)
-	Successful chan bool
+	exec string
+	args []interface{}
+	chl  chan bool
+}
+type DBQueryResponse struct {
+	query  string
+	args   []interface{}
+	sender dbSender
+}
+
+func (r *DBActionResponse) execute() {
+	if result, err := dbQueries[r.exec].Exec(); err != nil {
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.action" + r.exec}
+	} else {
+		if _, err := result.RowsAffected(); err != nil {
+			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.action" + r.exec}
+		} else {
+			Events.GoFuncEvent("databasing.query.action"+r.exec, func() { r.chl <- true })
+		}
+		close(r.chl)
+	}
+}
+func (r *DBQueryResponse) execute() {
+	if rows, err := dbQueries[r.query].Query(); err != nil {
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.request" + r.query}
+	} else {
+		for rows.Next() {
+			Events.GoFuncEvent("databasing.query.request"+r.query, func() { r.sender.send(rows) })
+		}
+		r.sender.close()
+	}
+}
+func RequestAction(mode string, name string, args ...interface{}) <-chan bool {
+	response := make(chan bool, 1)
+	actions <- &DBActionResponse{
+		exec: mode + "_" + name,
+		args: args,
+		chl:  response,
+	}
+	return response
 }
 
 func makeAdminFunc(argCount uint16, f func(...string)) func() {
@@ -74,12 +112,10 @@ func SetupAdminCommands() {
 	if adminCommands == nil {
 		adminCommands = make(map[string]Events.Event)
 		//adminCommands["exit"] = &Events.Function{Name: "Admin!Exit", Function: func() { Shutdown <- true }}
-		adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember", Function: makeAdminFunc(1,
-			func(args ...string) { RequestMemberAction("Add", NewMember(), args[0]) })}
-		adminCommands["addMemberFull"] = &Events.Function{Name: "Admin!AddMember_Full", Function: makeAdminFunc(2,
-			func(args ...string) { RequestMemberAction("Add", NewMemberFull(args[0]), args[1]) })}
+		adminCommands["addMember"] = &Events.Function{Name: "Admin!AddMember_Full", Function: makeAdminFunc(2,
+			func(args ...string) { RequestAction("Members", "Add", NewMemberFull(args[0]).Name, args[1]) })}
 		adminCommands["removeMember"] = &Events.Function{Name: "Admin!RemoveMember", Function: makeAdminFunc(1,
-			func(args ...string) { RequestMemberAction("Remove", MembersByName[args[0]]) })}
+			func(args ...string) { RequestAction("Members", "Remove", Members[args[0]].Name) })}
 	}
 }
 func HandleAdminCommand(msg string) bool {
@@ -106,18 +142,12 @@ func Setup() {
 
 	SetupAdminCommands()
 
-	ResourceRequests = make(chan *DBResourceResponse, 16)
-	ResourcesRequests = make(chan *DBResourcesResponse, 16)
-	ChatMsgRequests = make(chan *DBChatMsgResponse, 16)
-	MemberRequests = make(chan *DBMemberResponse, 16)
-	MemberNamesRequests = make(chan *DBMemberResponse, 16)
-	ChannelRequests = make(chan *DBChannelResponse, 16)
-	ChannelNamesRequests = make(chan *DBClientChannelResponse, 16)
-	ActionRequests = make(chan *DBActionResponse, 32)
+	queries = make(chan dbQuery, 16)
+	actions = make(chan dbQuery, 16)
 
 	LoadedResources = make(map[string]*Resource)
 	Channels = make(map[string]*Channel)
-	MembersByName = make(map[string]*Member)
+	Members = make(map[string]*Member)
 
 	reSanatizeDatabase = regexp.MustCompile(`(\n, \r, \, ', ")`)
 	reIsName = regexp.MustCompile(`[a-zA-Z][a-zA-Z0-9_-]*`)
@@ -181,92 +211,25 @@ func End() {
 		if onClose != nil {
 			onClose()
 		}
-		close(ResourceRequests)
-		close(ResourcesRequests)
-		close(ChatMsgRequests)
-		close(MemberRequests)
-		close(MemberNamesRequests)
-		close(ChannelRequests)
-		close(ChannelNamesRequests)
-		close(ActionRequests)
+		close(queries)
+		close(actions)
 	})
 }
 
 func StartMessageListening(db *sql.DB) {
 	for {
 		select {
-		case request := <-ResourceRequests:
+		case request := <-queries:
 			if request == nil {
 				return
 			}
-			row := request.QueryRow()
-			Events.GoFuncEvent("databasing.Resources.Parse", func() { request.Parse(row) })
-		case request := <-ResourcesRequests:
+			go request.execute()
+		case request := <-actions:
 			if request == nil {
 				return
 			}
-			if rows, err := request.Query(); err != nil {
-				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ResourceRequest.Query"}
-			} else {
-				Events.GoFuncEvent("databasing.Resources.Parse", func() { request.Parse(rows) })
-			}
-		case request := <-ChatMsgRequests:
-			if request == nil {
-				return
-			}
-			if rows, err := request.Query(); err != nil {
-				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChatMsgRequest.Query"}
-			} else {
-				Events.GoFuncEvent("databasing.chatmgs.Parse", func() { request.Parse(rows) })
-			}
-		case request := <-MemberRequests:
-			if request == nil {
-				return
-			}
-			if rows, err := request.Query(); err != nil {
-				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.MemberRequest.Query"}
-			} else {
-				Events.GoFuncEvent("databasing.members.Parse", func() { request.Parse(rows) })
-			}
-		case request := <-MemberNamesRequests:
-			if request == nil {
-				return
-			}
-			if rows, err := request.Query(); err != nil {
-				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.MemberNamesRequest.Query"}
-			} else {
-				Events.GoFuncEvent("databasing.members.ParseNames", func() { request.ParseNames(rows) })
-			}
-		case request := <-ChannelRequests:
-			if request == nil {
-				return
-			}
-			if rows, err := request.Query(); err != nil {
-				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChannelRequest.Query"}
-			} else {
-				Events.GoFuncEvent("databasing.channels.ParseNew", func() { request.ParseNew(rows) })
-			}
-		case request := <-ChannelNamesRequests:
-			if request == nil {
-				return
-			}
-			if rows, err := request.Query(); err != nil {
-				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ChannelRequest.Query"}
-			} else {
-				Events.GoFuncEvent("databasing.channels.ParseNames", func() { request.ParseNames(rows) })
-			}
-		case request := <-ActionRequests:
-			if request == nil {
-				return
-			}
-			if result, err := request.Exec(); err != nil {
-				Logger.Error <- Logger.ErrMsg{Err: err, Status: "StartMessageListening.ActionRequest.Exec"}
-			} else {
-				Events.GoFuncEvent("databasing.setup.Success", func() { request.ParseSuccess(result) })
-			}
-
+			go request.execute()
 		}
-
 	}
 }
 
@@ -277,13 +240,8 @@ func SetupServer() {
 }
 
 func Close() {
-	close(ResourceRequests)
-	close(ResourcesRequests)
-	close(ChatMsgRequests)
-	close(MemberRequests)
-	close(MemberNamesRequests)
-	close(ChannelRequests)
-	close(ChannelNamesRequests)
+	close(queries)
+	close(actions)
 }
 
 func IsName(input string) bool {
@@ -294,13 +252,4 @@ func SanatizeDatabaseInput(input string) string {
 	return reSanatizeDatabase.ReplaceAllStringFunc(input, func(match string) string {
 		return "\\" + match
 	})
-}
-
-func (as *DBActionResponse) ParseSuccess(result sql.Result) {
-	if _, err := result.RowsAffected(); err != nil {
-		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.setup.ParseSuccess"}
-	}
-
-	as.Successful <- true
-	close(as.Successful)
 }

@@ -15,19 +15,32 @@ type Channel struct {
 	NewClient    chan chan []byte
 	RemoveClient chan chan []byte
 }
+type DBChannelResponse struct {
+	chl       chan *Channel
+	assembler func(*sql.Rows) *Channel
+}
+
+func (mr *DBChannelResponse) send(result *sql.Rows) {
+	mr.chl <- mr.assembler(result)
+}
+func (mr *DBChannelResponse) close() {
+	close(mr.chl)
+}
 
 type ClientChannel struct {
 	Channel   *Channel
 	LastKnown time.Time
 }
-
-type DBChannelResponse struct {
-	Query    func() (*sql.Rows, error)
-	Channels chan *Channel
-}
 type DBClientChannelResponse struct {
-	Query    func() (*sql.Rows, error)
-	Channels chan *ClientChannel
+	chl       chan *ClientChannel
+	assembler func(*sql.Rows) *ClientChannel
+}
+
+func (mr *DBClientChannelResponse) send(result *sql.Rows) {
+	mr.chl <- mr.assembler(result)
+}
+func (mr *DBClientChannelResponse) close() {
+	close(mr.chl)
 }
 
 func NewChannel(name string, id int) *Channel {
@@ -61,24 +74,6 @@ func (channel *Channel) HookUp() {
 		}
 	})
 }
-func NewChannelResponse(name string, arg ...interface{}) *DBChannelResponse {
-	return NewChannelResponseArr(name, arg)
-}
-func NewChannelResponseArr(name string, args []interface{}) *DBChannelResponse {
-	return &DBChannelResponse{
-		Query:    func() (*sql.Rows, error) { return dbQueries["Channels_"+name].Query(args...) },
-		Channels: make(chan *Channel, 1)}
-}
-func NewClientChannelResponseArr(name string, args []interface{}) *DBClientChannelResponse {
-	return &DBClientChannelResponse{
-		Query:    func() (*sql.Rows, error) { return dbQueries["Channels_"+name].Query(args...) },
-		Channels: make(chan *ClientChannel, 1)}
-}
-func NewChannelActionArr(name string, args []interface{}) *DBActionResponse {
-	return &DBActionResponse{
-		Exec:       func() (sql.Result, error) { return dbQueries["Channels_"+name].Exec(args...) },
-		Successful: make(chan bool, 1)}
-}
 
 func LoadAllChannels() {
 	request := RequestChannel("AllNames")
@@ -103,46 +98,48 @@ func SetupChannels(db *sql.DB) {
 	defineQuery(db, "Channels_AddMember", `INSERT INTO channels_user_info VALUES (?,?,?,NULL);`)
 }
 func RequestChannel(name string, args ...interface{}) <-chan *Channel {
-	request := NewChannelResponseArr(name, args)
-	ChannelRequests <- request
-	return request.Channels
+	response := make(chan *Channel, 1)
+	queries <- &DBQueryResponse{
+		query: "Channels_" + name,
+		args:  args,
+		sender: &DBChannelResponse{
+			chl:       make(chan *Channel, 1),
+			assembler: parseChannel,
+		},
+	}
+	return response
 }
 func RequestChannelsByName(name string, args ...interface{}) <-chan *ClientChannel {
-	request := NewClientChannelResponseArr(name, args)
-	ChannelNamesRequests <- request
-	return request.Channels
-}
-func RequestChannelAction(name string, args ...interface{}) <-chan bool {
-	var request = NewChannelActionArr(name, args)
-	ActionRequests <- request
-	return request.Successful
-}
-func (chs *DBChannelResponse) ParseNew(rows *sql.Rows) {
-	for rows.Next() {
-		var (
-			name string
-			id   int
-		)
-		if err := rows.Scan(&name, &id); err != nil {
-			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.channels.Parse"}
-		}
-		channel := NewChannel(name, id)
-		chs.Channels <- channel
+	response := make(chan *ClientChannel, 1)
+	queries <- &DBQueryResponse{
+		query: "Channels_" + name,
+		args:  args,
+		sender: &DBClientChannelResponse{
+			chl:       make(chan *ClientChannel, 1),
+			assembler: parseClientChannel,
+		},
 	}
-	close(chs.Channels)
+	return response
 }
-func (chs *DBClientChannelResponse) ParseNames(rows *sql.Rows) {
-	for rows.Next() {
-		var (
-			name       string
-			last_known time.Time
-		)
 
-		if err := rows.Scan(&name, &last_known); err != nil {
-			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.channels.Parse"}
-		}
-
-		chs.Channels <- &ClientChannel{Channels[name], last_known}
+func parseChannel(rows *sql.Rows) *Channel {
+	var (
+		name string
+		id   int
+	)
+	if err := rows.Scan(&name, &id); err != nil {
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.channels.Parse"}
 	}
-	close(chs.Channels)
+	return NewChannel(name, id)
+}
+func parseClientChannel(rows *sql.Rows) *ClientChannel {
+	var (
+		name       string
+		last_known time.Time
+	)
+
+	if err := rows.Scan(&name, &last_known); err != nil {
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.channels.Parse"}
+	}
+	return &ClientChannel{Channels[name], last_known}
 }

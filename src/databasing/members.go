@@ -28,6 +28,8 @@ channels_names
 
 **/
 
+var Members map[string]*Member
+
 func LoadAllMembers() {
 
 	for member := range RequestMember("All") {
@@ -40,8 +42,15 @@ type Member struct {
 }
 
 type DBMemberResponse struct {
-	Query   func() (*sql.Rows, error)
-	Members chan *Member
+	chl       chan *Member
+	assembler func(*sql.Rows) *Member
+}
+
+func (mr *DBMemberResponse) send(result *sql.Rows) {
+	mr.chl <- mr.assembler(result)
+}
+func (mr *DBMemberResponse) close() {
+	close(mr.chl)
 }
 
 func NewMember() *Member {
@@ -60,21 +69,7 @@ func NewMemberFull(name string) *Member {
 }
 func AddMemberToMaps(member *Member) {
 	Logger.Verbose <- Logger.Msg{"Add Member: " + member.Name}
-	MembersByName[member.Name] = member
-}
-
-func NewMemberResponse(name string, arg ...interface{}) *DBMemberResponse {
-	return NewMemberResponseArr(name, arg)
-}
-func NewMemberResponseArr(name string, args []interface{}) *DBMemberResponse {
-	return &DBMemberResponse{
-		Query:   func() (*sql.Rows, error) { return dbQueries["Members_"+name].Query(args...) },
-		Members: make(chan *Member, 1)}
-}
-func NewMemberActionArr(name string, args []interface{}) *DBActionResponse {
-	return &DBActionResponse{
-		Exec:       func() (sql.Result, error) { return dbQueries["Members_"+name].Exec(args...) },
-		Successful: make(chan bool, 1)}
+	Members[member.Name] = member
 }
 
 func SetupMembers(db *sql.DB) {
@@ -88,47 +83,41 @@ func SetupMembers(db *sql.DB) {
 }
 
 func RequestMember(name string, args ...interface{}) <-chan *Member {
-	request := NewMemberResponseArr(name, args)
-	MemberRequests <- request
-	return request.Members
+	response := make(chan *Member, 1)
+	queries <- &DBQueryResponse{
+		query: "Members_" + name,
+		args:  args,
+		sender: &DBMemberResponse{
+			chl:       make(chan *Member, 1),
+			assembler: parseMember,
+		},
+	}
+	return response
 }
 func RequestMembersByName(name string, args ...interface{}) <-chan *Member {
-	request := NewMemberResponseArr(name, args)
-	MemberNamesRequests <- request
-	return request.Members
-}
-func RequestMemberAction(name string, member *Member, args ...interface{}) <-chan bool {
-	var request *DBActionResponse
-	switch len(args) {
-	case 0:
-		request = NewMemberActionArr(name, []interface{}{member.Name})
-	case 1:
-		request = NewMemberActionArr(name, []interface{}{member.Name, args[0]})
-	case 2:
-		request = NewMemberActionArr(name, []interface{}{member.Name, args[0], args[1]})
+	response := make(chan *Member, 1)
+	queries <- &DBQueryResponse{
+		query: "Channels_" + name,
+		args:  args,
+		sender: &DBMemberResponse{
+			chl:       make(chan *Member, 1),
+			assembler: parseMemberByName,
+		},
 	}
-	ActionRequests <- request
-	return request.Successful
+	return response
 }
-func (ms *DBMemberResponse) Parse(rows *sql.Rows) {
-	for rows.Next() {
-		var name string
-		if err := rows.Scan(&name); err != nil {
-			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.members.Parse"}
-		}
+func parseMember(rows *sql.Rows) *Member {
+	var name string
+	if err := rows.Scan(&name); err != nil {
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.members.Parse"}
+	}
+	return &Member{Name: name}
+}
+func parseMemberByName(rows *sql.Rows) *Member {
+	var name string
+	if err := rows.Scan(&name); err != nil {
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.members.ParseNames"}
+	}
 
-		ms.Members <- &Member{Name: name}
-	}
-	close(ms.Members)
-}
-func (ms *DBMemberResponse) ParseNames(rows *sql.Rows) {
-	for rows.Next() {
-		var name string
-		if err := rows.Scan(&name); err != nil {
-			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.members.ParseNames"}
-		}
-
-		ms.Members <- MembersByName[name]
-	}
-	close(ms.Members)
+	return Members[name]
 }
