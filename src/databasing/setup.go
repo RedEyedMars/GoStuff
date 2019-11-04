@@ -58,7 +58,7 @@ type DBQueryResponse struct {
 }
 
 func (r *DBActionResponse) execute() {
-	if result, err := dbQueries[r.exec].Exec(); err != nil {
+	if result, err := dbQueries[r.exec].Exec(r.args...); err != nil {
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.action" + r.exec}
 	} else {
 		if _, err := result.RowsAffected(); err != nil {
@@ -73,7 +73,7 @@ func (r *DBActionResponse) execute() {
 	}
 }
 func (r *DBQueryResponse) execute() {
-	if rows, err := dbQueries[r.query].Query(); err != nil {
+	if rows, err := dbQueries[r.query].Query(r.args...); err != nil {
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.request" + r.query}
 	} else {
 		Events.GoFuncEvent("databasing.query.request"+r.query, func() {
