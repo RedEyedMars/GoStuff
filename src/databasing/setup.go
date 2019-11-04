@@ -59,12 +59,12 @@ type DBQueryResponse struct {
 
 func (r *DBActionResponse) execute() {
 	if result, err := dbQueries[r.exec].Exec(r.args...); err != nil {
-		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.action" + r.exec}
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.action." + r.exec}
 	} else {
 		if _, err := result.RowsAffected(); err != nil {
-			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.action" + r.exec}
+			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.action." + r.exec}
 		} else {
-			Events.GoFuncEvent("databasing.query.action"+r.exec, func() {
+			Events.FuncEvent("databasing.query.action."+r.exec, func() {
 				r.chl <- true
 				close(r.chl)
 			})
@@ -74,9 +74,9 @@ func (r *DBActionResponse) execute() {
 }
 func (r *DBQueryResponse) execute() {
 	if rows, err := dbQueries[r.query].Query(r.args...); err != nil {
-		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.request" + r.query}
+		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.request." + r.query}
 	} else {
-		Events.GoFuncEvent("databasing.query.request"+r.query, func() {
+		Events.FuncEvent("databasing.query.request."+r.query, func() {
 			for rows.Next() {
 				r.sender.send(rows)
 			}
