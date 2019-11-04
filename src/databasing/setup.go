@@ -64,19 +64,24 @@ func (r *DBActionResponse) execute() {
 		if _, err := result.RowsAffected(); err != nil {
 			Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.action" + r.exec}
 		} else {
-			Events.GoFuncEvent("databasing.query.action"+r.exec, func() { r.chl <- true })
+			Events.GoFuncEvent("databasing.query.action"+r.exec, func() {
+				r.chl <- true
+				close(r.chl)
+			})
 		}
-		close(r.chl)
+
 	}
 }
 func (r *DBQueryResponse) execute() {
 	if rows, err := dbQueries[r.query].Query(); err != nil {
 		Logger.Error <- Logger.ErrMsg{Err: err, Status: "databasing.query.request" + r.query}
 	} else {
-		for rows.Next() {
-			Events.GoFuncEvent("databasing.query.request"+r.query, func() { r.sender.send(rows) })
-		}
-		r.sender.close()
+		Events.GoFuncEvent("databasing.query.request"+r.query, func() {
+			for rows.Next() {
+				r.sender.send(rows)
+			}
+			r.sender.close()
+		})
 	}
 }
 func RequestAction(mode string, name string, args ...interface{}) <-chan bool {
